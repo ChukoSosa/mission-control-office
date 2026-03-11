@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { faBuildingShield } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getAgents } from "@/lib/api/agents";
 import { getTasks } from "@/lib/api/tasks";
 import { OfficeScene, type OfficeAgentView } from "@/components/office/OfficeScene";
@@ -144,19 +143,9 @@ export default function OfficePage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-950 px-4 py-4 lg:px-6">
-      <header className="mb-4 flex items-center gap-3 rounded-lg border border-surface-700 bg-surface-900 px-4 py-3">
-        <FontAwesomeIcon icon={faBuildingShield} className="text-cyan-300" />
-        <div>
-          <h1 className="text-sm font-bold uppercase tracking-widest text-slate-100">
-            Mission Control Office
-          </h1>
-          <p className="text-[10px] text-slate-500">Operational Observability Interface</p>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr]">
-        <section className="lg:h-[78vh] lg:min-h-[560px]">
+    <DashboardShell>
+      <div className="h-full grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr]">
+        <section className="min-h-0 lg:h-full lg:min-h-[560px]">
           {agentsLoading ? (
             <div className="flex h-full items-center justify-center rounded-xl border border-surface-700 bg-surface-900 text-sm text-slate-400">
               Loading office scene...
@@ -170,7 +159,7 @@ export default function OfficePage() {
           )}
         </section>
 
-        <section className="min-h-0 lg:h-[78vh] lg:min-h-[560px]">
+        <section className="min-h-0 lg:h-full lg:min-h-[560px]">
           <AgentInspector
             agent={selected?.agent ?? null}
             task={selected?.task ?? null}
@@ -184,10 +173,10 @@ export default function OfficePage() {
           />
         </section>
 
-        <section className="min-h-0 lg:h-[78vh] lg:min-h-[560px]">
+        <section className="min-h-0 lg:h-full lg:min-h-[560px]">
           <ActivityPanel selectedAgentId={selectedAgentId} />
         </section>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

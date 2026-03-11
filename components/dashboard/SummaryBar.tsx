@@ -12,6 +12,7 @@ import { getTasks } from "@/lib/api/tasks";
 import { getAgents } from "@/lib/api/agents";
 import { getSupervisorKpis } from "@/lib/api/kpis";
 import type { SSEStatus } from "@/lib/sse/useSSE";
+import { useSSE } from "@/lib/sse/useSSE";
 import { cn } from "@/lib/utils/cn";
 
 const sseStatusConfig: Record<SSEStatus, { label: string; className: string; pulse: boolean }> = {
@@ -38,10 +39,13 @@ const sseStatusConfig: Record<SSEStatus, { label: string; className: string; pul
 };
 
 interface SummaryBarProps {
-  sseStatus: SSEStatus;
+  sseStatus?: SSEStatus;
 }
 
 export function SummaryBar({ sseStatus }: SummaryBarProps) {
+  const { status: streamStatus } = useSSE();
+  const effectiveSseStatus = sseStatus ?? streamStatus;
+
   const { data: tasks = [] } = useQuery({ queryKey: ["tasks"], queryFn: getTasks });
   const { data: agents = [] } = useQuery({ queryKey: ["agents"], queryFn: getAgents });
   const { data: kpis = {} } = useQuery({ queryKey: ["kpis"], queryFn: getSupervisorKpis });
@@ -60,7 +64,7 @@ export function SummaryBar({ sseStatus }: SummaryBarProps) {
         ? kpis["active_runs"]
         : null;
 
-  const sse = sseStatusConfig[sseStatus];
+  const sse = sseStatusConfig[effectiveSseStatus];
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-4 py-3">
@@ -74,11 +78,11 @@ export function SummaryBar({ sseStatus }: SummaryBarProps) {
         <span
           className={cn(
             "h-1.5 w-1.5 rounded-full",
-            sseStatus === "connected"
+            effectiveSseStatus === "connected"
               ? "bg-green-400"
-              : sseStatus === "connecting"
+              : effectiveSseStatus === "connecting"
                 ? "bg-amber-400"
-                : sseStatus === "error"
+                : effectiveSseStatus === "error"
                   ? "bg-red-400"
                   : "bg-slate-400",
             sse.pulse && "animate-pulse",

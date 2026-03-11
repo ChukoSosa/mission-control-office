@@ -1,11 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBullseye } from "@fortawesome/free-solid-svg-icons";
-import { useSSE } from "@/lib/sse/useSSE";
-import { SummaryBar } from "@/components/dashboard/SummaryBar";
-import { FiltersBar } from "@/components/dashboard/FiltersBar";
 import { AgentsPanel } from "@/components/dashboard/AgentsPanel";
 import { TasksPanel } from "@/components/dashboard/TasksPanel";
 import { TaskDetailPanel } from "@/components/dashboard/TaskDetailPanel";
@@ -16,40 +11,15 @@ import { AgentDetailModal } from "@/components/dashboard/AgentDetailModal";
 import type { Agent } from "@/types";
 
 export default function DashboardPage() {
-  const { status: sseStatus, events: sseEvents } = useSSE();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   return (
-    <div className="min-h-screen bg-surface-950 flex flex-col">
-      {/* Header */}
-      <header className="shrink-0 border-b border-surface-700 bg-surface-900 px-6 py-3 flex items-center gap-3">
-        <FontAwesomeIcon icon={faBullseye} className="text-cyan-400 text-lg" />
-        <div>
-          <h1 className="text-sm font-bold tracking-widest uppercase text-slate-100">
-            Mission Control
-          </h1>
-          <p className="text-[10px] text-slate-500">Operational Dashboard · Phase I</p>
-        </div>
-      </header>
-
-      {/* Summary bar */}
-      <div className="shrink-0 px-6 pt-4">
-        <SummaryBar sseStatus={sseStatus} />
-        <FiltersBar />
-      </div>
-
-      {/* Main grid */}
-      <main className="flex-1 grid grid-cols-1 gap-4 p-6 lg:grid-cols-[280px_1fr_1fr_280px] xl:grid-cols-[300px_1fr_1fr_300px] overflow-hidden">
-        {/* Column 1 — Agents */}
+    <>
+      <div className="h-full grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_1fr_280px] xl:grid-cols-[300px_1fr_1fr_300px] overflow-hidden">
         <AgentsPanel onSelectAgent={setSelectedAgent} />
-
-        {/* Column 2 — Tasks */}
         <TasksPanel />
-
-        {/* Column 3 — Task detail */}
         <TaskDetailPanel />
 
-        {/* Column 4 — Activity + KPIs + SSE */}
         <div className="flex flex-col gap-4 min-h-0">
           <div className="flex-1 min-h-0">
             <ActivityFeedPanel />
@@ -58,16 +28,16 @@ export default function DashboardPage() {
             <KpiPanel />
           </div>
           <div className="shrink-0">
-            <SSEPanel status={sseStatus} events={sseEvents} />
+            <SSEPanel />
           </div>
         </div>
-      </main>
+      </div>
 
       <AgentDetailModal
         agent={selectedAgent}
         open={!!selectedAgent}
         onClose={() => setSelectedAgent(null)}
       />
-    </div>
+    </>
   );
 }
