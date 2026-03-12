@@ -19,12 +19,15 @@ export function statusVariant(status: string | null | undefined): StatusVariant 
     case "RUNNING":
     case "ACTIVE":
       return "cyan";
+    case "REVIEW":
+      return "amber";
     case "THINKING":
       return "amber";
     case "PENDING":
     case "QUEUED":
     case "WAITING":
       return "amber";
+    case "BACKLOG":
     case "IDLE":
       return "slate";
     case "BLOCKED":
