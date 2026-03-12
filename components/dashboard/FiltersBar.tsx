@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilter, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+import { faFilter, faRotateLeft, faBoxArchive } from "@fortawesome/free-solid-svg-icons";
 import { getAgents } from "@/lib/api/agents";
 import { getTasks } from "@/lib/api/tasks";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -18,9 +18,14 @@ export function FiltersBar() {
   const activityLimit = useDashboardStore((s) => s.activityLimit);
   const setActivityLimit = useDashboardStore((s) => s.setActivityLimit);
   const clearFilters = useDashboardStore((s) => s.clearFilters);
+  const showArchived = useDashboardStore((s) => s.showArchived);
+  const setShowArchived = useDashboardStore((s) => s.setShowArchived);
 
   const { data: agents = [] } = useQuery({ queryKey: ["agents"], queryFn: getAgents });
-  const { data: tasks = [] } = useQuery({ queryKey: ["tasks"], queryFn: getTasks });
+  const { data: tasks = [] } = useQuery({
+     queryKey: ["tasks", showArchived],
+    queryFn: () => getTasks({ includeArchived: showArchived }),
+  });
 
   const statuses = useMemo(() => {
     const set = new Set<string>();
@@ -86,6 +91,18 @@ export function FiltersBar() {
         <FontAwesomeIcon icon={faRotateLeft} />
         Reset
       </button>
+
+        <button
+          onClick={() => setShowArchived(!showArchived)}
+          className={`inline-flex items-center gap-1 rounded border px-2 py-1.5 text-xs transition ${
+            showArchived
+              ? "border-amber-500/50 bg-amber-500/20 text-amber-200"
+              : "border-surface-700 bg-surface-800 text-slate-400 hover:bg-surface-700"
+          }`}
+        >
+          <FontAwesomeIcon icon={faBoxArchive} />
+          Archivadas
+        </button>
     </div>
   );
 }

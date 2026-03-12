@@ -52,6 +52,7 @@ export function useSSE() {
       "supervisor.kpis",
       "task.comment.created",
       "task.comment.answered",
+        "task.archived",
     ];
 
     const handlers = trackedEvents.map((name) => {
@@ -79,6 +80,9 @@ export function useSSE() {
           }
           void queryClient.invalidateQueries({ queryKey: ["activity"] });
         }
+          if (name === "task.archived") {
+            void queryClient.invalidateQueries({ queryKey: ["tasks"] });
+          }
       };
       es.addEventListener(name, handler);
       return { name, handler };

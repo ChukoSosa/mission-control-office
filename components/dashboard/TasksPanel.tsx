@@ -16,10 +16,11 @@ export function TasksPanel() {
   const selectedAgentId = useDashboardStore((s) => s.selectedAgentId);
   const taskStatusFilter = useDashboardStore((s) => s.taskStatusFilter);
   const searchQuery = useDashboardStore((s) => s.searchQuery);
+    const showArchived = useDashboardStore((s) => s.showArchived);
 
   const { data: tasks, isLoading, isError } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: getTasks,
+      queryKey: ["tasks", showArchived],
+      queryFn: () => getTasks({ includeArchived: showArchived }),
     refetchInterval: 20_000,
   });
 

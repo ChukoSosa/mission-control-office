@@ -9,12 +9,14 @@ export async function GET(request: NextRequest) {
     const assignedAgentId = searchParams.get("assignedAgentId") || undefined;
     const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined;
     const cursor = searchParams.get("cursor") || undefined;
+    const includeArchived = searchParams.get("archived") === "true";
 
     const { tasks, nextCursor } = await taskService.list({
       status,
       assignedAgentId,
       limit,
       cursor,
+      includeArchived,
     });
 
     return NextResponse.json({ tasks, nextCursor });

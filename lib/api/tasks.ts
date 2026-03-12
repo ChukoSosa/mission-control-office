@@ -13,12 +13,13 @@ export interface CreateTaskCommentInput {
   inReplyToId?: string | null;
 }
 
-export async function getTasks(): Promise<Task[]> {
+export async function getTasks(options?: { includeArchived?: boolean }): Promise<Task[]> {
   if (shouldUseMockData()) {
     return MOCK_TASKS;
   }
 
-  const raw = await apiFetch<unknown>("/api/tasks");
+  const url = options?.includeArchived ? "/api/tasks?archived=true" : "/api/tasks";
+  const raw = await apiFetch<unknown>(url);
   const parsed = TasksResponseSchema.safeParse(raw);
   if (!parsed.success) {
     console.warn("[getTasks] schema mismatch", parsed.error.flatten());
@@ -100,4 +101,13 @@ export async function addTaskComment(taskId: string, input: CreateTaskCommentInp
 
 export async function deleteTask(taskId: string): Promise<void> {
   await apiFetch<unknown>(`/api/tasks/${taskId}`, { method: "DELETE" });
+}
+
+export async function archiveTask(taskId: string): Promise<Task> {
+  const raw = await apiFetch<unknown>(`/api/tasks/${taskId}/archive`, { method: "POST" });
+  const parsed = TasksResponseSchema.shape.tasks.element.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error("Failed to parse archived task response");
+  }
+  return parsed.data;
 }

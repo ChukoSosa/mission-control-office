@@ -86,6 +86,7 @@ model Task {
   metadata         Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+    archivedAt       DateTime?
   assignedAgent    Agent?            @relation("AgentTasks", fields: [assignedAgentId], references: [id])
   pipelineStage    PipelineStage?    @relation(fields: [pipelineStageId], references: [id])
   activities       TaskActivity[]

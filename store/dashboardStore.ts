@@ -11,6 +11,8 @@ interface DashboardState {
   setSearchQuery: (query: string) => void;
   activityLimit: number;
   setActivityLimit: (limit: number) => void;
+    showArchived: boolean;
+    setShowArchived: (v: boolean) => void;
   clearFilters: () => void;
 }
 
@@ -25,11 +27,14 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   activityLimit: 50,
   setActivityLimit: (limit) => set({ activityLimit: limit }),
+    showArchived: false,
+    setShowArchived: (v) => set({ showArchived: v }),
   clearFilters: () =>
     set({
       selectedAgentId: null,
       taskStatusFilter: "ALL",
       searchQuery: "",
       activityLimit: 50,
+        showArchived: false,
     }),
 }));

@@ -4,11 +4,12 @@ import { useMemo, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock, faUser, faXmark, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faBoxArchive } from "@fortawesome/free-solid-svg-icons";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { TaskDetailPanel } from "@/components/dashboard/TaskDetailPanel";
 import { CreateTaskModal } from "@/components/dashboard/CreateTaskModal";
 import { Card, EmptyState, ErrorMessage, SkeletonList, StatusBadge } from "@/components/ui";
-import { deleteTask, getTasks } from "@/lib/api/tasks";
+import { deleteTask, archiveTask, getTasks } from "@/lib/api/tasks";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { fromNow } from "@/lib/utils/formatDate";
 import { priorityLabel, priorityVariant } from "@/lib/utils/formatStatus";
@@ -21,10 +22,13 @@ export default function BoardPage() {
   const searchQuery = useDashboardStore((s) => s.searchQuery);
   const selectedTaskId = useDashboardStore((s) => s.selectedTaskId);
   const setSelectedTaskId = useDashboardStore((s) => s.setSelectedTaskId);
+    const showArchived = useDashboardStore((s) => s.showArchived);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [confirmDeleteFromModal, setConfirmDeleteFromModal] = useState(false);
   const [isDeletingTask, setIsDeletingTask] = useState(false);
+    const [confirmArchiveFromModal, setConfirmArchiveFromModal] = useState(false);
+    const [isArchivingTask, setIsArchivingTask] = useState(false);
   const queryClient = useQueryClient();
 
   const handleOpenCreate = useCallback(() => {
@@ -56,11 +60,27 @@ export default function BoardPage() {
     }
   }, [queryClient, selectedTaskId, setSelectedTaskId]);
 
+    const handleArchiveFromModal = useCallback(async () => {
+      if (!selectedTaskId) return;
+
+      setIsArchivingTask(true);
+      try {
+        await archiveTask(selectedTaskId);
+        setSelectedTaskId(null);
+        setConfirmArchiveFromModal(false);
+        await queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      } finally {
+        setIsArchivingTask(false);
+      }
+    }, [queryClient, selectedTaskId, setSelectedTaskId]);
+
   const { data: tasks = [], isLoading, isError } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: getTasks,
+    queryKey: ["tasks", showArchived],
+    queryFn: () => getTasks({ includeArchived: showArchived }),
     refetchInterval: 20_000,
   });
+
+    const selectedTask = tasks.find((t) => t.id === selectedTaskId);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
@@ -214,6 +234,34 @@ export default function BoardPage() {
                     Cancel
                   </button>
                 )}
+                  {selectedTask?.status === "DONE" && !selectedTask?.archivedAt && (
+                    <>
+                      <button
+                        onClick={() => {
+                          if (!confirmArchiveFromModal) {
+                            setConfirmArchiveFromModal(true);
+                            return;
+                          }
+                          void handleArchiveFromModal();
+                        }}
+                        disabled={isArchivingTask}
+                        className="rounded border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-amber-300 hover:bg-amber-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <span className="flex items-center gap-1 text-xs">
+                          <FontAwesomeIcon icon={faBoxArchive} />
+                          {isArchivingTask ? "Archiving..." : confirmArchiveFromModal ? "Confirm Archive" : "Archive"}
+                        </span>
+                      </button>
+                      {confirmArchiveFromModal && !isArchivingTask && (
+                        <button
+                          onClick={() => setConfirmArchiveFromModal(false)}
+                          className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs text-slate-300 hover:bg-surface-700"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </>
+                  )}
                 <button
                   onClick={() => {
                     setConfirmDeleteFromModal(false);

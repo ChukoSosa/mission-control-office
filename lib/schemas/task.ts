@@ -15,6 +15,7 @@ export const TaskSchema = z.object({
   ownerAgentId: z.string().nullable().optional(),
   updatedAt: z.string().optional(),
   description: z.string().nullable().optional(),
+  archivedAt: z.string().nullable().optional(),
 }).passthrough();
 
 export type Task = z.infer<typeof TaskSchema>;

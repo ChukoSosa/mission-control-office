@@ -14,11 +14,13 @@ export const taskService = {
     assignedAgentId?: string;
     limit?: number;
     cursor?: string;
+    includeArchived?: boolean;
   }) {
     const take = typeof options?.limit === "number" ? Math.max(1, Math.min(options.limit, 200)) : undefined;
     const where: any = {
       status: options?.status ? toPrismaTaskStatus(options.status) : undefined,
       assignedAgentId: options?.assignedAgentId,
+        archivedAt: options?.includeArchived ? undefined : null,
     };
 
     const tasks = await prisma.task.findMany({
@@ -162,7 +164,6 @@ export const taskService = {
   async delete(id: string) {
     try {
       const task = await prisma.task.delete({ where: { id } });
-
       emitEvent({
         type: "task.deleted",
         data: { id: task.id },
@@ -182,5 +183,36 @@ export const taskService = {
       }
       throw error;
     }
+  },
+
+  async archive(id: string) {
+    const existing = await prisma.task.findUnique({ where: { id }, select: { id: true, title: true, status: true, archivedAt: true } });
+    if (!existing) {
+      throw new ApiError(404, "NOT_FOUND", "Task not found");
+    }
+    if (existing.status !== "DONE") {
+      throw new ApiError(400, "VALIDATION_ERROR", "Only DONE tasks can be archived");
+    }
+    if (existing.archivedAt) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Task is already archived");
+    }
+
+    const archived = await prisma.task.update({
+      where: { id },
+      data: { archivedAt: new Date() },
+      include: { assignedAgent: { select: { id: true, name: true } } },
+    });
+
+    emitEvent({ type: "task.archived", data: { id: archived.id, archivedAt: archived.archivedAt } });
+
+    await activityService.log({
+      kind: "task",
+      action: "task.archived",
+      summary: `Task "${existing.title}" archived`,
+      taskId: existing.id,
+      payload: { archivedAt: archived.archivedAt },
+    });
+
+    return archived;
   },
 };
