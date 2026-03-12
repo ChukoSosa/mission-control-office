@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRobot, faClock } from "@fortawesome/free-solid-svg-icons";
 import { getAgents } from "@/lib/api/agents";
+import { useDashboardStore } from "@/store/dashboardStore";
 import { Card, StatusBadge, SkeletonList, EmptyState, ErrorMessage } from "@/components/ui";
+import { cn } from "@/lib/utils/cn";
 import { fromNow } from "@/lib/utils/formatDate";
 import type { Agent } from "@/types";
 
@@ -13,6 +15,8 @@ interface AgentsPanelProps {
 }
 
 export function AgentsPanel({ onSelectAgent }: AgentsPanelProps) {
+  const selectedAgentId = useDashboardStore((s) => s.selectedAgentId);
+
   const { data: agents, isLoading, isError } = useQuery({
     queryKey: ["agents"],
     queryFn: getAgents,
@@ -28,12 +32,20 @@ export function AgentsPanel({ onSelectAgent }: AgentsPanelProps) {
       )}
       {agents && agents.length > 0 && (
         <div className="space-y-2">
-          {agents.map((agent) => (
-            <button
-              key={agent.id}
-              onClick={() => onSelectAgent(agent)}
-              className="w-full text-left rounded-md border border-surface-700 bg-surface-800 p-3 space-y-1.5 hover:border-surface-600 hover:bg-surface-700"
-            >
+          {agents.map((agent) => {
+            const isSelected = selectedAgentId === agent.id;
+
+            return (
+              <button
+                key={agent.id}
+                onClick={() => onSelectAgent(agent)}
+                className={cn(
+                  "w-full text-left rounded-md border p-3 space-y-1.5 transition-colors",
+                  isSelected
+                    ? "border-cyan-500/50 bg-cyan-500/10"
+                    : "border-surface-700 bg-surface-800 hover:border-surface-600 hover:bg-surface-700",
+                )}
+              >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <FontAwesomeIcon icon={faRobot} className="text-purple-400 shrink-0 text-xs" />
@@ -56,8 +68,9 @@ export function AgentsPanel({ onSelectAgent }: AgentsPanelProps) {
                   <span>{fromNow(agent.heartbeat)}</span>
                 </div>
               )}
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
     </Card>
