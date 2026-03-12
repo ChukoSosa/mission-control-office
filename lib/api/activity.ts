@@ -1,6 +1,8 @@
 import { apiFetch } from "./client";
 import { ActivityItemSchema, ActivityResponseSchema } from "@/lib/schemas";
 import type { ActivityItem } from "@/lib/schemas";
+import { shouldUseMockData } from "./mockMode";
+import { MOCK_ACTIVITY } from "@/lib/mock/data";
 
 export interface ActivityParams {
   taskId?: string;
@@ -10,6 +12,23 @@ export interface ActivityParams {
 }
 
 export async function getActivity(params: ActivityParams = {}): Promise<ActivityItem[]> {
+  if (shouldUseMockData()) {
+    let items = MOCK_ACTIVITY;
+    if (params.taskId) {
+      items = items.filter((item) => item.taskId === params.taskId);
+    }
+    if (params.agentId) {
+      items = items.filter((item) => item.agentId === params.agentId);
+    }
+    if (params.runId) {
+      items = items.filter((item) => item.runId === params.runId);
+    }
+    if (params.limit && params.limit > 0) {
+      items = items.slice(0, params.limit);
+    }
+    return items;
+  }
+
   const qs = new URLSearchParams();
   if (params.taskId) qs.set("taskId", params.taskId);
   if (params.agentId) qs.set("agentId", params.agentId);

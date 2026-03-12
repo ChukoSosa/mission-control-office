@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Operational dashboard for Mission Control agents and tasks",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
       <body>

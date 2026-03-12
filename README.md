@@ -68,34 +68,30 @@ store/
 types/
 ```
 
-## Environment
-
-Create or edit `.env.local`:
-
-```env
-NEXT_PUBLIC_MISSION_CONTROL_API_BASE_URL=http://192.168.0.17:3000
-```
-
-Important:
-- If your API runs on another machine in the LAN, use that machine IP.
-- Do not use `localhost` unless API and frontend are on the same host.
-
-## Install
+## Install & Run
 
 ```bash
 npm install
-```
-
-## Run
-
-Development:
-
-```bash
 npm run dev
 ```
 
-Default frontend URL:
-- `http://localhost:3001`
+Eso es todo. `npm run dev` detecta el estado del entorno y se auto-configura:
+- Crea `.env` y `.env.local` si no existen
+- Genera el cliente Prisma
+- Aplica el schema a PostgreSQL
+- Seedea datos iniciales
+- Levanta Next.js en http://localhost:3001
+
+> **Prerequisito**: PostgreSQL corriendo localmente.
+> - macOS: `brew install postgresql@16 && brew services start postgresql@16`
+> - Windows: https://www.postgresql.org/download/windows/
+> - Linux: `apt-get install postgresql && service postgresql start`
+
+Si tus credenciales de Postgres son distintas, editá `.env` antes de correr:
+
+```env
+DATABASE_URL="postgresql://TU_USUARIO:TU_PASSWORD@localhost:5432/mission_control"
+```
 
 Production build:
 

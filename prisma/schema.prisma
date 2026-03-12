@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  BACKLOG
+  IN_PROGRESS
+  REVIEW
+  DONE
+  BLOCKED
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum AgentStatus {
+  IDLE
+  THINKING
+  WORKING
+  BLOCKED
+}
+
+enum SubtaskStatus {
+  TODO
+  DOING
+  DONE
+  BLOCKED
+}
+
+enum CalendarEntryType {
+  SCHEDULED_TASK
+  CRON
+  ROUTINE
+  DEADLINE
+}
+
+model Operator {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  preferences Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Agent {
+  id             String       @id @default(uuid())
+  name           String
+  role           String
+  avatar         String?
+  status         AgentStatus  @default(IDLE)
+  statusMessage  String?
+  currentTaskId  String?
+  capabilities   Json?
+  heartbeatAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  tasks          Task[]       @relation("AgentTasks")
+  ownedSubtasks  Subtask[]    @relation("SubtaskOwner")
+  routines       AgentRoutine[]
+  runs           Run[]
+}
+
+model Task {
+  id               String            @id @default(uuid())
+  title            String
+  description      String
+  status           TaskStatus        @default(BACKLOG)
+  priority         Int               @default(0)
+  dueDate          DateTime?
+  createdByType    String
+  createdById      String
+  assignedAgentId  String?
+  pipelineStageId  String?
+  tags             Json?
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  assignedAgent    Agent?            @relation("AgentTasks", fields: [assignedAgentId], references: [id])
+  pipelineStage    PipelineStage?    @relation(fields: [pipelineStageId], references: [id])
+  activities       TaskActivity[]
+  knowledgeItems   KnowledgeItem[]   @relation("TaskKnowledge")
+  calendarEntries  CalendarEntry[]   @relation("TaskCalendar")
+  subtasks         Subtask[]
+  comments         TaskComment[]
+}
+
+model TaskActivity {
+  id        String   @id @default(uuid())
+  task      Task     @relation(fields: [taskId], references: [id])
+  taskId    String
+  actorType String
+  actorId   String
+  activity  Json
+  createdAt DateTime @default(now())
+}
+
+model Subtask {
+  id            String         @id @default(uuid())
+  title         String
+  status        SubtaskStatus  @default(TODO)
+  position      Int            @default(0)
+  task          Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId        String
+  ownerAgent    Agent?         @relation("SubtaskOwner", fields: [ownerAgentId], references: [id])
+  ownerAgentId  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model TaskComment {
+  id               String        @id @default(uuid())
+  taskId           String
+  task             Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorType       String
+  authorId         String?
+  body             String
+  requiresResponse Boolean       @default(false)
+  status           String        @default("open")
+  inReplyToId      String?
+  inReplyTo        TaskComment?  @relation("TaskCommentReplies", fields: [inReplyToId], references: [id], onDelete: SetNull)
+  replies          TaskComment[] @relation("TaskCommentReplies")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  resolvedAt       DateTime?
+
+  @@index([taskId])
+  @@index([inReplyToId])
+  @@index([requiresResponse])
+}
+
+model Pipeline {
+  id          String          @id @default(uuid())
+  name        String
+  type        String
+  description String?
+  stages      PipelineStage[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model PipelineStage {
+  id               String   @id @default(uuid())
+  name             String
+  position         Int
+  autoTaskTemplate Json?
+  pipeline         Pipeline @relation(fields: [pipelineId], references: [id])
+  pipelineId       String
+  tasks            Task[]
+}
+
+model KnowledgeItem {
+  id            String   @id @default(uuid())
+  title         String
+  kind          String
+  storageRef    String?
+  summary       String?
+  tags          Json?
+  linkedTaskId  String?
+  createdByType String
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  linkedTask    Task?    @relation("TaskKnowledge", fields: [linkedTaskId], references: [id])
+}
+
+model CalendarEntry {
+  id             String             @id @default(uuid())
+  title          String
+  entryType      CalendarEntryType
+  relatedTaskId  String?
+  startAt        DateTime
+  endAt          DateTime?
+  recurrence     Json?
+  triggerPayload Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  relatedTask    Task?              @relation("TaskCalendar", fields: [relatedTaskId], references: [id])
+}
+
+model AgentRoutine {
+  id            String   @id @default(uuid())
+  agent         Agent    @relation(fields: [agentId], references: [id])
+  agentId       String
+  name          String
+  frequency     String
+  config        Json?
+  nextRunAt     DateTime?
+  lastRunStatus String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Run {
+  id            String      @id @default(uuid())
+  type          String
+  source        String
+  targetRef     String?
+  status        RunStatus   @default(PENDING)
+  triggeredBy   String
+  payload       Json?
+  resultSummary String?
+  errorDetail   String?
+  startedAt     DateTime?   @default(now())
+  finishedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  agent         Agent?      @relation(fields: [agentId], references: [id])
+  agentId       String?
+  events        SystemEvent[]
+}
+
+model SystemEvent {
+  id         String   @id @default(uuid())
+  source     String
+  eventType  String
+  severity   String
+  payload    Json?
+  occurredAt DateTime @default(now())
+  agentId    String?
+  taskId     String?
+  runId      String?
+  run        Run?     @relation(fields: [runId], references: [id])
+}

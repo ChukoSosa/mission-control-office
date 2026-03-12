@@ -3,7 +3,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSatelliteDish, faBolt } from "@fortawesome/free-solid-svg-icons";
 import { Card, EmptyState } from "@/components/ui";
-import type { SSEStatus } from "@/lib/sse/useSSE";
+import { useSSE, type SSEStatus } from "@/lib/sse/useSSE";
 import type { SSEEventData } from "@/lib/schemas";
 import { formatShortTime } from "@/lib/utils/formatDate";
 import { cn } from "@/lib/utils/cn";
@@ -16,30 +16,34 @@ const statusColorMap: Record<SSEStatus, string> = {
 };
 
 interface SSEPanelProps {
-  status: SSEStatus;
-  events: SSEEventData[];
+  status?: SSEStatus;
+  events?: SSEEventData[];
 }
 
 export function SSEPanel({ status, events }: SSEPanelProps) {
+  const stream = useSSE();
+  const effectiveStatus = status ?? stream.status;
+  const effectiveEvents = events ?? stream.events;
+
   return (
     <Card
       title="Live Events"
       titleRight={
-        <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold", statusColorMap[status])}>
+        <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold", statusColorMap[effectiveStatus])}>
           <FontAwesomeIcon
             icon={faSatelliteDish}
-            className={cn(status === "connected" && "animate-pulse")}
+            className={cn(effectiveStatus === "connected" && "animate-pulse")}
           />
-          {status.toUpperCase()}
+          {effectiveStatus.toUpperCase()}
         </div>
       }
       className="h-full"
     >
-      {events.length === 0 && <EmptyState message="Waiting for events…" />}
+      {effectiveEvents.length === 0 && <EmptyState message="Waiting for events…" />}
 
-      {events.length > 0 && (
+      {effectiveEvents.length > 0 && (
         <div className="space-y-1">
-          {events.map((evt, idx) => (
+          {effectiveEvents.map((evt, idx) => (
             <div
               key={idx}
               className="rounded border border-surface-700 bg-surface-800 px-2.5 py-1.5 flex items-start gap-2"
