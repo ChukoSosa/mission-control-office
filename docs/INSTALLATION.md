@@ -1,53 +1,148 @@
 # Mission Control Office - Installation Guide
 
-Este es el guía de instalación detallada para instalar Mission Control Office localmente. Fue diseñada para que **agentes de IA puedan automatizar la instalación** leyendo paso a paso.
+Guía de instalación para agentes de IA y desarrolladores.
+Diseñada para ejecutarse sin intervención manual de punta a punta.
 
 ---
 
 ## 📋 Prerequisites
-
-Antes de comenzar, asegúrate de tener:
 
 | Requirement | Version | Check |
 |---|---|---|
 | Node.js | 18+ | `node --version` |
 | npm | 8+ | `npm --version` |
 | PostgreSQL | 12+ | `psql --version` |
-| Git | (any) | `git --version` |
+| Git | any | `git --version` |
 
-Para instalar PostgreSQL:
-- **macOS**: `brew install postgresql` luego `brew services start postgresql`
-- **Windows**: Descarga desde [postgresql.org](https://www.postgresql.org/download/windows/)
-- **Linux**: `apt-get install postgresql postgresql-contrib` (Ubuntu/Debian)
+### Instalar PostgreSQL
 
-Después de instalar PostgreSQL, verifica que está corriendo:
+**macOS (Homebrew — recomendado):**
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Windows:**
+Descarga desde https://www.postgresql.org/download/windows/
+
+**Linux (Ubuntu/Debian):**
+```bash
+apt-get install postgresql postgresql-contrib
+service postgresql start
+```
+
+Verificar que corre:
 ```bash
 psql --version
-psql -U postgres -c "SELECT version();"
+psql -U postgres -c "SELECT 1;"
 ```
 
 ---
 
-## 🚀 Installation Steps
+## 🚀 Instalación en 3 pasos
 
-### Step 1: Clone Repository
+### Paso 1: Clonar
 
 ```bash
-git clone https://github.com/lucybotbarko/mission-control-office.git
-cd mission-control-office
+git clone https://github.com/ChukoSosa/mclucy.git
+cd mclucy
 ```
 
-### Step 2: Install Dependencies
+### Paso 2: Instalar dependencias
 
 ```bash
 npm install
 ```
 
-Esto instalará todas las dependencias necesarias, incluyendo Prisma.
+### Paso 3: Levantar
 
-### Step 3: Configure Environment
+```bash
+npm run dev
+```
 
-Copia el archivo template de configuración:
+`npm run dev` se auto-configura completamente:
+- Crea `.env` y `.env.local` si no existen
+- Genera el cliente Prisma
+- Aplica el schema a PostgreSQL (`prisma db push`)
+- Seedea datos iniciales (1 agente + 1 tarea de onboarding)
+- Levanta Next.js en **http://localhost:3001**
+
+> ⚠️ Si tus credenciales de Postgres son distintas a `postgres/postgres`, editá `.env` antes de correr `npm run dev`:
+> ```env
+> DATABASE_URL="postgresql://TU_USUARIO:TU_PASSWORD@localhost:5432/mission_control"
+> ```
+
+---
+
+## ✅ Verificación
+
+Una vez que Next.js levante, en otra terminal:
+
+```bash
+curl http://localhost:3001/api/health
+curl http://localhost:3001/api/agents
+curl http://localhost:3001/api/tasks
+```
+
+Esperás respuestas JSON. Si `/api/health` devuelve `{"status":"ok"}`, todo está funcionando.
+
+---
+
+## 🔧 Comandos útiles
+
+```bash
+npm run dev          # Auto-setup + levantar en modo desarrollo
+npm run build        # Build de producción
+npm start            # Levantar build de producción
+npm run db:push      # Aplicar schema de DB manualmente
+npm run db:seed      # Re-seedear datos iniciales
+npm run db:generate  # Regenerar cliente Prisma
+```
+
+---
+
+## 🐛 Troubleshooting rápido
+
+### Error: DATABASE_URL not set
+Asegurate de tener un `.env` en la raíz con:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mission_control"
+```
+
+### Error: connect ECONNREFUSED 5432
+PostgreSQL no está corriendo.
+- macOS: `brew services start postgresql@16`
+- Linux: `service postgresql start`
+- Windows: iniciar el servicio desde Services o pgAdmin
+
+### Error: role "postgres" does not exist (macOS)
+```bash
+psql postgres -c "CREATE ROLE postgres WITH LOGIN PASSWORD 'postgres' SUPERUSER;"
+```
+
+### Error: permission denied for database
+```bash
+psql postgres -c "ALTER DATABASE mission_control OWNER TO postgres;"
+```
+
+### Los endpoints /api/health, /api/agents devuelven 404
+El repo no tiene la capa de API local instalada. Verificá que estás usando el repo correcto (debe incluir `app/api/` y `prisma/`).
+
+### Puerto 3001 en uso
+```bash
+# macOS / Linux
+lsof -ti:3001 | xargs kill -9
+
+# Windows
+$conn = Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue
+if ($conn) { Stop-Process -Id $conn.OwningProcess -Force }
+```
+
+---
+
+**Si algo sale mal, el script de predev (`scripts/predev.js`) muestra el error exacto con la causa raíz antes de intentar levantar Next.js.**
 ```bash
 cp .env.example .env
 ```
