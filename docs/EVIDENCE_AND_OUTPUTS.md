@@ -15,12 +15,19 @@ If the package is extracted into a folder named `MCLUCY`, the effective path bec
 Each task should have its own folder:
 - `outputs/{ticket-id}/`
 
+Ticket ID format is canonical and sequential:
+- `task-001`, `task-002`, `task-014`, ...
+
+Each ticket folder contains two fixed subfolders:
+- `outputs/{ticket-id}/input/`
+- `outputs/{ticket-id}/output/`
+
 Examples:
-- `outputs/TASK-142/research.md`
-- `outputs/TASK-142/final-report.md`
-- `outputs/TASK-142/screenshots/`
-- `outputs/TASK-142/assets/`
-- `outputs/TASK-142/data/`
+- `outputs/task-014/input/context.md`
+- `outputs/task-014/input/requirements.png`
+- `outputs/task-014/output/final-report.md`
+- `outputs/task-014/output/screenshots/board.png`
+- `outputs/task-014/output/commit-links.md`
 
 ## Allowed evidence types
 
@@ -29,22 +36,33 @@ Typical deliverables include:
 - reports
 - screenshots
 - generated images
+- photos
+- videos
 - assets
 - code artifacts
 - structured data
 - summaries for review
+- links to Drive documents
+- links to GitHub commits/PRs
+- code snippets and technical notes
 
 Preferred textual format:
 - Markdown (`.md`)
 
 ## Minimum rule before review
 
-A task must not be moved to `REVIEW` unless evidence exists in the ticket folder.
+A task must not be moved to `REVIEW` unless evidence exists in the ticket `output` folder.
 
 Operational check:
-- output is saved
+- output is saved under `outputs/{ticket-id}/output/`
 - file paths are known
 - evidence is sufficient for a human to review the work
+- at least one file exists inside `output/` (or nested under it)
+
+## Lifecycle rule
+
+All tasks must pass through `REVIEW` before `DONE`.
+Direct transitions from `IN_PROGRESS` (or any other status) to `DONE` are rejected.
 
 ## Collaboration model
 
@@ -69,6 +87,6 @@ Suggested subfolders:
 
 When requesting review, the agent should be able to point to the evidence location clearly.
 Example:
-- `outputs/TASK-221/market-research.md`
+- `outputs/task-221/output/market-research.md`
 
 No evidence means no review request.
