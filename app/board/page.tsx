@@ -155,6 +155,18 @@ export default function BoardPage() {
     <DashboardShell>
       <div className="h-full min-h-0">
         <div className="mb-3 flex items-center gap-2">
+          {!demoMode && (
+            <>
+              <button
+                onClick={handleOpenCreate}
+                className="flex items-center justify-center gap-1.5 rounded-md border border-cyan-500/40 bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/30"
+              >
+                <FontAwesomeIcon icon={faPlus} />
+                Create New Task
+              </button>
+              <span className="text-slate-600">|</span>
+            </>
+          )}
           <button
             onClick={() => setBoardView("kanban")}
             className={`rounded border px-3 py-1 text-xs font-semibold transition-colors ${
@@ -202,15 +214,6 @@ export default function BoardPage() {
                       className="h-full"
                     >
                       <div className="space-y-2">
-                        {status === "BACKLOG" && !demoMode && (
-                          <button
-                            onClick={handleOpenCreate}
-                            className="flex w-full items-center justify-center gap-1.5 rounded border border-cyan-500/50 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/20"
-                          >
-                            <FontAwesomeIcon icon={faPlus} />
-                            Create New Task
-                          </button>
-                        )}
                         {(grouped[status] ?? []).map((task) => (
                           <button
                             key={task.id}
