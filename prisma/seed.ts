@@ -23,6 +23,22 @@ function loadAgentPrompt(): string {
   return "Read docs/OPENCLAW-AGENT-PROMPT.md for full operating instructions.";
 }
 
+function loadInstallationDocsSummary(): string {
+  return [
+    "Mandatory docs to read before operating:",
+    "- MISSION_CONTROL_OVERVIEW.md",
+    "- WORKFLOW_GUIDE.md",
+    "- TASK_SYSTEM.md",
+    "- MCLUCY_API_MANUAL.md",
+    "- EVIDENCE_AND_OUTPUTS.md",
+    "",
+    "Evidence system:",
+    "- Root folder: outputs/",
+    "- Per task folder: outputs/{ticket-id}/",
+    "- No task should move to REVIEW without evidence saved in its ticket folder.",
+  ].join("\n");
+}
+
 async function main() {
   const operator = await prisma.operator.upsert({
     where: { id: "operator-root" },
@@ -89,7 +105,10 @@ async function main() {
     where: { id: ONBOARDING_TASK_ID },
     update: {
       title: "Installation / Onboarding",
-      description: "Track initial setup and onboarding steps performed by OpenClaw.",
+      description:
+        "This is your first task. Execute each subtask in order to complete the onboarding flow. " +
+        "Read the required documents, verify the evidence system, and follow the operating instructions in the system comments. " +
+        "When all subtasks are DONE and the evidence folder is confirmed, move this card to REVIEW and wait for human approval.",
       status: "IN_PROGRESS",
       priority: 1,
       createdById: operator.id,
@@ -99,7 +118,10 @@ async function main() {
     create: {
       id: ONBOARDING_TASK_ID,
       title: "Installation / Onboarding",
-      description: "Track initial setup and onboarding steps performed by OpenClaw.",
+      description:
+        "This is your first task. Execute each subtask in order to complete the onboarding flow. " +
+        "Read the required documents, verify the evidence system, and follow the operating instructions in the system comments. " +
+        "When all subtasks are DONE and the evidence folder is confirmed, move this card to REVIEW and wait for human approval.",
       status: "IN_PROGRESS",
       priority: 1,
       createdById: operator.id,
@@ -126,12 +148,28 @@ async function main() {
     },
   });
 
+  await prisma.taskComment.upsert({
+    where: { id: "comment-onboarding-installation-docs" },
+    update: {
+      body: loadInstallationDocsSummary(),
+    },
+    create: {
+      id: "comment-onboarding-installation-docs",
+      taskId: ONBOARDING_TASK_ID,
+      authorType: "system",
+      authorId: "system",
+      body: loadInstallationDocsSummary(),
+      requiresResponse: false,
+      status: "open",
+    },
+  });
+
   await prisma.subtask.createMany({
     data: [
       {
         id: "subtask-onboarding-1",
         taskId: ONBOARDING_TASK_ID,
-        title: "Verify API and database connectivity",
+        title: "Read required docs — process MISSION_CONTROL_OVERVIEW.md, WORKFLOW_GUIDE.md, TASK_SYSTEM.md, MCLUCY_API_MANUAL.md and EVIDENCE_AND_OUTPUTS.md before operating",
         status: "TODO",
         position: 1,
         ownerAgentId: openClaw.id,
@@ -139,7 +177,7 @@ async function main() {
       {
         id: "subtask-onboarding-2",
         taskId: ONBOARDING_TASK_ID,
-        title: "Create initial workspace configuration",
+        title: "Verify connectivity — GET /api/system/state (wait for READY) then GET /api/health",
         status: "TODO",
         position: 2,
         ownerAgentId: openClaw.id,
@@ -147,7 +185,7 @@ async function main() {
       {
         id: "subtask-onboarding-3",
         taskId: ONBOARDING_TASK_ID,
-        title: "Register additional assistant profiles",
+        title: "Read task comments and confirm evidence system — GET /api/tasks/{id}/comments and verify outputs/ exists for ticket-based evidence",
         status: "TODO",
         position: 3,
         ownerAgentId: openClaw.id,
@@ -155,7 +193,7 @@ async function main() {
       {
         id: "subtask-onboarding-4",
         taskId: ONBOARDING_TASK_ID,
-        title: "Validate board and office views",
+        title: "Send initial heartbeat and connect to event stream — POST /api/agents/heartbeat then open persistent SSE connection to GET /api/events",
         status: "TODO",
         position: 4,
         ownerAgentId: openClaw.id,
@@ -163,7 +201,7 @@ async function main() {
       {
         id: "subtask-onboarding-5",
         taskId: ONBOARDING_TASK_ID,
-        title: "Finalize onboarding checklist",
+        title: "Request onboarding review — PATCH this task to REVIEW with evidence: docs processed, endpoints verified, outputs/ confirmed, SSE active, ready to operate",
         status: "TODO",
         position: 5,
         ownerAgentId: openClaw.id,
@@ -246,6 +284,8 @@ async function main() {
       },
     });
   }
+
+}
 
 main()
   .catch((error) => {

@@ -3,6 +3,8 @@ import { create } from "zustand";
 interface DashboardState {
   selectedTaskId: string | null;
   setSelectedTaskId: (id: string | null) => void;
+  slaFocusedTaskId: string | null;
+  setSlaFocusedTaskId: (id: string | null) => void;
   selectedAgentId: string | null;
   setSelectedAgentId: (id: string | null) => void;
   taskStatusFilter: string;
@@ -19,6 +21,8 @@ interface DashboardState {
 export const useDashboardStore = create<DashboardState>((set) => ({
   selectedTaskId: null,
   setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+  slaFocusedTaskId: null,
+  setSlaFocusedTaskId: (id) => set({ slaFocusedTaskId: id }),
   selectedAgentId: null,
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   taskStatusFilter: "ALL",
@@ -35,6 +39,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       taskStatusFilter: "ALL",
       searchQuery: "",
       activityLimit: 50,
+      slaFocusedTaskId: null,
         showArchived: false,
     }),
 }));

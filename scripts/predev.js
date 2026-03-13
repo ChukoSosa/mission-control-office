@@ -166,8 +166,14 @@ async function main() {
   const promptSrc = path.join(rootDir, "docs", "OPENCLAW-AGENT-PROMPT.md");
   const bootstrapDest = path.join(rootDir, "OPENCLAW-BOOTSTRAP.txt");
   if (fs.existsSync(promptSrc)) {
-    fs.copyFileSync(promptSrc, bootstrapDest);
-    LOG.ok("OPENCLAW-BOOTSTRAP.txt generated — paste this into OpenClaw as the system prompt");
+    const baseUrl =
+      process.env.NEXT_PUBLIC_MISSION_CONTROL_API_BASE_URL ||
+      "http://localhost:3001";
+    const promptContent = fs
+      .readFileSync(promptSrc, "utf-8")
+      .replace(/\{\{MC_LUCY_BASE_URL\}\}/g, baseUrl);
+    fs.writeFileSync(bootstrapDest, promptContent, "utf-8");
+    LOG.ok(`OPENCLAW-BOOTSTRAP.txt generated (URL: ${baseUrl}) — paste into OpenClaw as system prompt`);
   } else {
     LOG.warn("docs/OPENCLAW-AGENT-PROMPT.md not found — skipping bootstrap file generation");
   }

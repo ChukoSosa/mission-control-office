@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/api/server/prisma";
 import { apiErrorResponse } from "@/app/api/server/api-error";
+import { activityService } from "@/app/api/server/activity-service";
+import { isMissionControlDemoMode, demoReadOnlyResponse } from "@/app/api/server/demo-mode";
+
+const OPERATOR_ACTOR = {
+  type: "human" as const,
+  id: "operator",
+  name: "Operator",
+};
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const subtasks = await prisma.subtask.findMany({
-      where: { taskId: params.id },
+      where: { taskId: id },
       include: {
         ownerAgent: {
           select: { id: true, name: true },
@@ -25,10 +34,15 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const task = await prisma.task.findUnique({ where: { id: params.id } });
+    if (isMissionControlDemoMode()) {
+      return demoReadOnlyResponse();
+    }
+
+    const { id } = await params;
+    const task = await prisma.task.findUnique({ where: { id } });
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
@@ -58,13 +72,27 @@ export async function POST(
         title,
         status,
         position,
-        taskId: params.id,
+        taskId: id,
         ownerAgentId,
       },
       include: {
         ownerAgent: {
           select: { id: true, name: true },
         },
+      },
+    });
+
+    await activityService.log({
+      kind: "subtask",
+      action: "subtask.created",
+      summary: `Operator created subtask "${subtask.title}"`,
+      actor: OPERATOR_ACTOR,
+      taskId: id,
+      subtaskId: subtask.id,
+      agentId: subtask.ownerAgentId ?? undefined,
+      payload: {
+        status: subtask.status,
+        ownerAgentId: subtask.ownerAgentId,
       },
     });
 

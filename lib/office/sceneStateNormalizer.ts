@@ -16,8 +16,8 @@ export interface NormalizedSceneState {
   pulse: boolean;
 }
 
-function fromRawStatus(raw?: string | null): SceneState {
-  const value = (raw ?? "").toLowerCase();
+function fromRawStatus(raw?: string | null, statusMessage?: string | null): SceneState {
+  const value = `${raw ?? ""} ${statusMessage ?? ""}`.toLowerCase();
 
   if (!value) return "unknown";
   if (value.includes("critical") || value.includes("urgent")) return "critical";
@@ -33,7 +33,7 @@ function fromRawStatus(raw?: string | null): SceneState {
 }
 
 export function normalizeSceneState(agent: Agent): NormalizedSceneState {
-  const state = fromRawStatus(agent.status);
+  const state = fromRawStatus(agent.status, agent.statusMessage);
 
   switch (state) {
     case "working":

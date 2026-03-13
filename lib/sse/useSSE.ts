@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getSSEUrl } from "@/lib/api/client";
 import type { SSEEventData } from "@/lib/schemas";
+import { isPublicDemoMode } from "@/lib/utils/demoMode";
 
 export type SSEStatus = "connecting" | "connected" | "disconnected" | "error";
 
@@ -28,6 +29,12 @@ export function useSSE() {
   }, []);
 
   useEffect(() => {
+    if (isPublicDemoMode()) {
+      setStatus("disconnected");
+      setEvents([]);
+      return;
+    }
+
     let es: EventSource;
 
     try {

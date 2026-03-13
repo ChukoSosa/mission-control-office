@@ -230,6 +230,17 @@ model SystemEvent {
   occurredAt DateTime @default(now())
   agentId    String?
   taskId     String?
+  subtaskId  String?
+  commentId  String?
+  actorType  String?
+  actorId    String?
   runId      String?
   run        Run?     @relation(fields: [runId], references: [id])
+
+  @@index([occurredAt])
+  @@index([taskId])
+  @@index([subtaskId])
+  @@index([commentId])
+  @@index([agentId])
+  @@index([actorType, actorId])
 }

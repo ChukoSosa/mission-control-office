@@ -84,6 +84,9 @@ export function resolveTargetZoneFromState(sceneState: SceneState, baseZone: Zon
     case "idle":
       return "kitchen";
     case "reviewing":
+      if (baseZone === "master-office" || baseZone === "barko-office" || baseZone === "chief-desk") {
+        return baseZone;
+      }
       return "lounge";
     case "blocked":
       return baseZone;

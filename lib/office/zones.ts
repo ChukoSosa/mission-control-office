@@ -1,4 +1,5 @@
 export type ZoneId =
+  | "chief-desk"
   | "master-office"
   | "barko-office"
   | "dev-seat-1"
@@ -30,17 +31,18 @@ export const DEV_SEAT_IDS: ZoneId[] = [
 ];
 
 export const OFFICE_ZONES: Record<ZoneId, ZoneConfig> = {
-  "master-office": { id: "master-office", label: "Master Office", x: 13, y: 16 },
-  "barko-office": { id: "barko-office", label: "Barko Office", x: 31, y: 16 },
-  "dev-seat-1": { id: "dev-seat-1", label: "Dev Seat 1", x: 20, y: 46 },
-  "dev-seat-2": { id: "dev-seat-2", label: "Dev Seat 2", x: 31, y: 46 },
-  "dev-seat-3": { id: "dev-seat-3", label: "Dev Seat 3", x: 42, y: 46 },
-  "dev-seat-4": { id: "dev-seat-4", label: "Dev Seat 4", x: 20, y: 61 },
-  "dev-seat-5": { id: "dev-seat-5", label: "Dev Seat 5", x: 31, y: 61 },
-  "dev-seat-6": { id: "dev-seat-6", label: "Dev Seat 6", x: 42, y: 61 },
-  kitchen: { id: "kitchen", label: "Kitchen", x: 63, y: 27 },
-  lounge: { id: "lounge", label: "Lounge", x: 73, y: 49 },
-  "game-area": { id: "game-area", label: "Game Area", x: 84, y: 62 },
-  terrace: { id: "terrace", label: "Terrace", x: 88, y: 18 },
-  hallway: { id: "hallway", label: "Hallway", x: 53, y: 50 },
+  "chief-desk": { id: "chief-desk", label: "mcLUCY Desk", x: 50, y: 17 },
+  "master-office": { id: "master-office", label: "Master Office", x: 25, y: 18 },
+  "barko-office": { id: "barko-office", label: "Barko Office", x: 86, y: 34 },
+  "dev-seat-1": { id: "dev-seat-1", label: "Dev Seat 1", x: 43, y: 45 },
+  "dev-seat-2": { id: "dev-seat-2", label: "Dev Seat 2", x: 57, y: 45 },
+  "dev-seat-3": { id: "dev-seat-3", label: "Dev Seat 3", x: 43, y: 58 },
+  "dev-seat-4": { id: "dev-seat-4", label: "Dev Seat 4", x: 57, y: 58 },
+  "dev-seat-5": { id: "dev-seat-5", label: "Dev Seat 5", x: 35, y: 52 },
+  "dev-seat-6": { id: "dev-seat-6", label: "Dev Seat 6", x: 65, y: 52 },
+  kitchen: { id: "kitchen", label: "Kitchen", x: 83, y: 60 },
+  lounge: { id: "lounge", label: "Lounge", x: 88, y: 32 },
+  "game-area": { id: "game-area", label: "Game Area", x: 89, y: 88 },
+  terrace: { id: "terrace", label: "Terrace", x: 18, y: 72 },
+  hallway: { id: "hallway", label: "Hallway", x: 50, y: 34 },
 };

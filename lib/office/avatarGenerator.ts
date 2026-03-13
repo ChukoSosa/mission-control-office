@@ -1,102 +1,77 @@
 import type { Agent } from "@/types";
 import { apiFetch } from "@/lib/api/client";
 
+export type AvatarGenerationVariant = "mc-monkey-local-pool";
+
+export interface GenerateAvatarResult {
+  avatarUrl: string;
+  prompt: string;
+  variant: AvatarGenerationVariant;
+}
+
 export const AVATAR_STORAGE_KEY = "mission-control-agent-avatars";
-const BASE_STYLE_PROMPT =
-  "minimalist pixel art character, full body, very large pixels, 8-bit style, flat colors, no shading, simple geometric shapes, retro video game npc style, square pixel grid, simple eyes and mouth, limited color palette, clean outline, centered character, solid pastel background, similar to classic pixel people sprite sheets, highly simplified design, chunky pixels, minimal detail";
+const MC_MONKEY_POOL_USED_KEY = "mission-control-mc-monkey-used";
 
-const PER_AGENT_VARIATIONS: Record<string, string> = {
-  claudio:
-    "character: project manager developer, wearing a brown hat and glasses, blue shirt, holding a small clipboard, calm expression, organized tech leader vibe.",
-  codi:
-    "character: frontend developer designer, colorful hair, wearing headphones, casual shirt, creative tech vibe.",
-  ninja:
-    "character: backend developer ninja, dark hoodie or ninja outfit, mysterious tech hacker vibe.",
-  lucy:
-    "character: operations manager woman, yellow jacket, confident posture, professional but casual.",
-};
+function readUsedMonkeysFromStorage(): string[] {
+  if (typeof window === "undefined") return [];
 
-const hairStyles = ["short straight hair", "curly bob", "side-part hair", "spiky short hair", "ponytail"];
-const hairColors = ["black", "dark brown", "chestnut", "blonde", "auburn", "teal"];
-const hats = ["none", "baseball cap", "beanie", "fedora", "headband"];
-const accessories = ["none", "glasses", "headphones", "earpiece", "small badge"];
-const shirts = ["hoodie", "polo shirt", "jacket", "t-shirt", "sweater"];
-const shirtColors = ["blue", "yellow", "green", "gray", "red", "purple"];
-const pants = ["jeans", "cargo pants", "formal pants", "joggers"];
-const pantsColors = ["dark blue", "black", "brown", "gray"];
-const shoes = ["sneakers", "boots", "loafers", "running shoes"];
-const shoesColors = ["black", "white", "brown", "gray"];
-const backgrounds = ["soft pink", "muted blue", "warm beige", "mint pastel", "lavender pastel"];
+  try {
+    const raw = window.localStorage.getItem(MC_MONKEY_POOL_USED_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is string => typeof item === "string");
+  } catch {
+    return [];
+  }
+}
 
-function randomItem(values: string[]): string {
+function saveUsedMonkeysToStorage(used: string[]): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(MC_MONKEY_POOL_USED_KEY, JSON.stringify(used));
+}
+
+function pickRandom(values: string[]): string {
   return values[Math.floor(Math.random() * values.length)] ?? values[0];
 }
 
-function buildRandomizedCharacterBlock(agent: Agent): string {
-  const roleHint = agent.role ? `role vibe: ${agent.role}.` : "role vibe: mission control operator.";
-
-  return `Create a pixel art avatar using the STYLE DNA rules.
-
-Randomize the character with the following attributes:
-
-hair: ${randomItem(hairStyles)}
-hair color: ${randomItem(hairColors)}
-
-hat: ${randomItem(hats)}
-
-accessory: ${randomItem(accessories)}
-
-shirt: ${randomItem(shirts)}
-shirt color: ${randomItem(shirtColors)}
-
-pants: ${randomItem(pants)}
-pants color: ${randomItem(pantsColors)}
-
-shoes: ${randomItem(shoes)}
-shoes color: ${randomItem(shoesColors)}
-
-background color: ${randomItem(backgrounds)}
-
-character: ${agent.name}, ${roleHint}
-
-Keep the exact same pixel art style defined in the STYLE DNA.
-Keep the avatar centered.
-Keep the proportions identical to the system avatar style.
-Do not add extra details.
-Maintain the minimalist pixel look.`;
-}
-
-export function buildAvatarPrompt(agent: Agent): string {
-  const agentKey = agent.name.trim().toLowerCase();
-  const specificBlock = PER_AGENT_VARIATIONS[agentKey];
-
-  if (specificBlock) {
-    return `${BASE_STYLE_PROMPT}
-
-${specificBlock}
-
-simple geometric shapes, limited color palette, simple eyes and mouth, centered character, solid background, sprite sheet style pixel character.`;
-  }
-
-  return `${BASE_STYLE_PROMPT}
-
-${buildRandomizedCharacterBlock(agent)}`;
-}
-
-async function callGenerateAvatarApi(prompt: string): Promise<string> {
-  const res = await fetch("/api/generate-avatar", {
-    method: "POST",
+async function fetchLocalMcMonkeyPool(): Promise<string[]> {
+  const response = await fetch("/api/mc-monkeys", {
+    method: "GET",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? `Avatar generation failed (${res.status})`);
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error((payload as { error?: string }).error ?? "Failed to load MC MONKEY image folder");
   }
 
-  const { avatarUrl } = await res.json();
-  return avatarUrl as string;
+  const payload = await response.json() as { avatars?: string[] };
+  const avatars = (payload.avatars ?? []).filter((item): item is string => typeof item === "string");
+
+  if (avatars.length === 0) {
+    throw new Error("MC MONKEY pool is empty. Add images (except 00.*) to public/office/mcmonkes-library.");
+  }
+
+  return avatars;
+}
+
+async function selectRandomLocalMcMonkeyWithoutRepeat(): Promise<string> {
+  const allAvatars = await fetchLocalMcMonkeyPool();
+  const usedBefore = readUsedMonkeysFromStorage();
+  const usedSet = new Set(usedBefore.filter((item) => allAvatars.includes(item)));
+
+  let candidates = allAvatars.filter((item) => !usedSet.has(item));
+  if (candidates.length === 0) {
+    usedSet.clear();
+    candidates = [...allAvatars];
+  }
+
+  const selected = pickRandom(candidates);
+  usedSet.add(selected);
+  saveUsedMonkeysToStorage([...usedSet]);
+
+  return selected;
 }
 
 export function readAvatarMappingFromStorage(): Record<string, string> {
@@ -123,21 +98,29 @@ export function saveAvatarMappingToStorage(mapping: Record<string, string>): voi
   window.localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(mapping));
 }
 
-export async function persistAvatar(agentId: string, avatarUrl: string, prompt: string): Promise<void> {
+export async function persistAvatar(
+  agentId: string,
+  avatarUrl: string,
+  prompt: string,
+  variant: AvatarGenerationVariant = "mc-monkey-local-pool",
+): Promise<void> {
   try {
     await apiFetch(`/api/agents/${agentId}/avatar`, {
       method: "POST",
-      body: JSON.stringify({ avatarUrl, prompt }),
+      body: JSON.stringify({ avatarUrl, prompt, variant }),
     });
   } catch {
     // Optional endpoint: fallback persistence is handled in localStorage.
   }
 }
 
-export async function generateAvatar(agent: Agent): Promise<{ avatarUrl: string; prompt: string }> {
-  const prompt = buildAvatarPrompt(agent);
-  const avatarUrl = await callGenerateAvatarApi(prompt);
-  return { avatarUrl, prompt };
+export async function generateMcMonkeyAvatar(agent: Agent): Promise<GenerateAvatarResult> {
+  const avatarUrl = await selectRandomLocalMcMonkeyWithoutRepeat();
+  return {
+    avatarUrl,
+    prompt: `MC MONKEY local asset selected for ${agent.name}`,
+    variant: "mc-monkey-local-pool",
+  };
 }
 
 function isLikelyImageUrl(value: unknown): value is string {

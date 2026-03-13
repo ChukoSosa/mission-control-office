@@ -20,7 +20,7 @@ Visión general de la arquitectura de Mission Control Office: componentes, flujo
 │   Next.js API Routes (/api)     │
 │  - /agents                      │
 │  - /tasks                       │
-│  - /runs                        │
+│  - /system                      │
 │  - /activity                    │
 │  - /events (SSE Stream)         │
 └────────────┬────────────────────┘
@@ -46,54 +46,73 @@ Visión general de la arquitectura de Mission Control Office: componentes, flujo
 ```
 app/
 ├── api/
-│   ├── server/          # Backend services & Prisma (task-service, event-bus, etc.)
-│   ├── agents/          # GET /api/agents, POST /api/agents
-│   ├── tasks/           # GET/POST /api/tasks, PATCH/DELETE /api/tasks/[id]
-│   │   ├── [id]/archive # POST /api/tasks/:id/archive
-│   │   ├── [id]/subtasks# GET/POST /api/tasks/:id/subtasks
-│   │   ├── [id]/comments# GET/POST comments, reply, resolve
-│   │   └── sla-alerts/  # GET /api/tasks/sla-alerts (SLA breach detector)
-│   ├── subtasks/        # PATCH/DELETE /api/subtasks/[id]
-│   ├── pipelines/       # GET /api/pipelines (with stages + tasks)
-│   ├── runs/            # GET/POST /api/runs
-│   ├── activity/        # GET /api/activity
-│   ├── events/          # GET /api/events (SSE Stream)
-│   ├── generate-avatar/ # POST /api/generate-avatar
-│   └── proxy/           # Proxy middleware for remote API
+│   ├── server/              # Backend services & Prisma (task-service, event-bus)
+│   ├── agents/              # GET /api/agents, POST /api/agents/heartbeat
+│   ├── tasks/               # GET/POST /api/tasks, PATCH/DELETE /api/tasks/[id]
+│   │   ├── [id]/archive     # POST /api/tasks/:id/archive
+│   │   ├── [id]/subtasks    # GET/POST /api/tasks/:id/subtasks
+│   │   ├── [id]/comments    # GET/POST comments, reply, resolve
+│   │   └── sla-alerts/      # GET /api/tasks/sla-alerts (SLA breach detector)
+│   ├── subtasks/            # PATCH/DELETE /api/subtasks/[id]
+│   ├── pipelines/           # GET /api/pipelines (with stages + tasks)
+│   ├── activity/            # GET /api/activity
+│   ├── comments/            # Shared comment utilities
+│   ├── events/              # GET /api/events (SSE Stream)
+│   ├── generate-avatar/     # POST /api/generate-avatar
+│   ├── health/              # GET /api/health
+│   ├── mc-monkeys/          # Avatar seed endpoint
+│   ├── supervisor/          # GET /api/supervisor/kpis, /api/supervisor/overview
+│   └── system/              # GET /api/system/state
 │
-├── dashboard-page.tsx   # Dashboard view
-├── board/
-│   └── page.tsx        # Board view
-├── office/
-│   └── page.tsx        # Office 3D scene
-├── layout.tsx          # Root layout
-├── page.tsx            # Home page
-└── providers.tsx       # React Query, Zustand providers
+├── (dashboard)/             # Dashboard route group
+│   ├── board/
+│   ├── office/
+│   └── overview/
+├── (mission-control)/       # Mission Control-only routes (URL preserved)
+│   ├── app/page.tsx         # /app — Mission Control (redirect)
+│   ├── board/page.tsx       # /board — Board view
+│   ├── initializing/page.tsx# /initializing — Boot screen
+│   ├── office/page.tsx      # /office — Office 3D scene
+│   ├── overview/page.tsx    # /overview — Overview
+│   └── dashboard-page.tsx   # Dashboard component
+├── proxy/[...path]/         # Proxy passthrough
+├── web/                     # Marketing/public routes
+│   ├── landing/             # /web/landing
+│   ├── manual/              # /web/manual
+│   ├── payment/             # /web/payment
+│   ├── thank-you/           # /web/thank-you
+│   └── story/               # /web/story
+├── layout.tsx               # Root layout
+├── page.tsx                 # Home (/)
+└── providers.tsx            # React Query, Zustand providers
 ```
 
 ### `/components` - React Components
 
 ```
 components/
-├── dashboard/
-│   ├── DashboardShell.tsx      # Main layout
-│   ├── AgentsPanel.tsx         # Agents list
-│   ├── TasksPanel.tsx          # Tasks list
-│   ├── ActivityFeedPanel.tsx   # Activity log + SLA alerts section
-│   ├── KpiPanel.tsx            # Key metrics
-│   ├── SSEPanel.tsx            # Real-time events
-│   ├── FiltersBar.tsx          # Filters
-│   ├── SummaryBar.tsx          # Top stats
-│   ├── AgentDetailModal.tsx    # Agent details
-│   ├── TaskDetailPanel.tsx     # Task details + MainAgentBubble
-│   ├── PipelineBoard.tsx       # Pipeline/stage lanes view
-│   └── CreateTaskModal.tsx     # Task creation modal
-│
-├── office/
-│   ├── OfficeScene.tsx         # 3D scene (Babylon.js)
-│   ├── AgentBubble.tsx         # Agent avatar bubble
-│   ├── AgentInspector.tsx      # Agent inspector panel
-│   └── ActivityPanel.tsx       # Activity sidebar
+├── mission-control/
+│   ├── dashboard/
+│   │   ├── DashboardShell.tsx      # Main layout
+│   │   ├── AgentsPanel.tsx         # Agents list
+│   │   ├── TasksPanel.tsx          # Tasks list
+│   │   ├── ActivityFeedPanel.tsx   # Activity log + SLA alerts section
+│   │   ├── KpiPanel.tsx            # Key metrics
+│   │   ├── SSEPanel.tsx            # Real-time events
+│   │   ├── FiltersBar.tsx          # Filters
+│   │   ├── SummaryBar.tsx          # Top stats
+│   │   ├── AgentDetailModal.tsx    # Agent details
+│   │   ├── TaskDetailPanel.tsx     # Task details + MainAgentBubble
+│   │   ├── PipelineBoard.tsx       # Pipeline/stage lanes view
+│   │   └── CreateTaskModal.tsx     # Task creation modal
+│   ├── office/
+│   │   ├── OfficeScene.tsx         # 3D scene (Babylon.js)
+│   │   ├── AgentBubble.tsx         # Agent avatar bubble
+│   │   ├── AgentInspector.tsx      # Agent inspector panel
+│   │   └── ActivityPanel.tsx       # Activity sidebar
+│   └── initialization/
+│       ├── InitializationChecklist.tsx
+│       └── SystemStateBadge.tsx
 │
 └── ui/
     ├── Card.tsx                # Base card component
@@ -249,30 +268,11 @@ Query params for GET `/api/tasks`:
 |---|---|---|
 | GET | `/api/pipelines` | List pipelines with stages and tasks |
 
-Response:
-```json
-{
-  "pipelines": [
-    {
-      "id": "pipeline-123",
-      "name": "Discovery",
-      "stages": [
-        { "id": "stage-1", "name": "Backlog", "position": 0, "tasks": [ ... ] },
-        { "id": "stage-2", "name": "In Progress", "position": 1, "tasks": [ ... ] }
-      ]
-    }
-  ]
-}
-```
-
-### **Runs**
+### **System**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/runs` | List execution runs |
-| GET | `/api/runs/:id` | Get run details |
-| POST | `/api/runs` | Create new run |
-| PATCH | `/api/runs/:id` | Update run status |
+| GET | `/api/system/state` | Get system initialization state |
 
 ### **Activity**
 
@@ -320,8 +320,8 @@ Connection:
 const es = new EventSource('/api/events');
 es.onmessage = (e) => {
   const event = JSON.parse(e.data);
-  // Handle: agent.status, task.updated, task.archived, run.completed,
-  //         task.comment.created, task.comment.answered, task.comment.escalated,
+  // Handle: agent.status, task.updated, task.archived,
+  //         task.comment.created, task.comment.replied, task.comment.resolved, task.comment.escalated,
   //         activity.logged, supervisor.kpis, etc.
 };
 es.onerror = () => es.close();
@@ -332,6 +332,7 @@ es.onerror = () => es.close();
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/generate-avatar` | Generate agent avatar via AI |
+| POST | `/api/mc-monkeys` | Generate pixel avatar (local, no AI key needed) |
 
 Payload:
 ```json

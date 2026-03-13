@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { taskService } from "@/app/api/server/task-service";
 import { apiErrorResponse } from "@/app/api/server/api-error";
+import { isMissionControlDemoMode, demoReadOnlyResponse } from "@/app/api/server/demo-mode";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +28,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isMissionControlDemoMode()) {
+      return demoReadOnlyResponse();
+    }
+
     const body = await request.json();
     const { title, description, assignedAgentId, status, priority, pipelineStageId } = body;
 

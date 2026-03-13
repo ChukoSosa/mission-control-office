@@ -1,0 +1,223 @@
+"use client";
+
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faXmark,
+  faListCheck,
+  faBolt,
+  faClock,
+} from "@fortawesome/free-solid-svg-icons";
+import type { Agent } from "@/types";
+import { getTasks } from "@/lib/api/tasks";
+import { getActivity } from "@/lib/api/activity";
+import { Card, StatusBadge, EmptyState, ErrorMessage, SkeletonList } from "@/components/ui";
+import { fromNow } from "@/lib/utils/formatDate";
+import { cn } from "@/lib/utils/cn";
+import { getActivityActorLabel, getActivityVisual } from "@/lib/activity/presentation";
+
+interface AgentDetailModalProps {
+  agent: Agent | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+function getAgentAvatarUrl(agent: Agent): string {
+  if (agent.avatarUrl) return agent.avatarUrl;
+  if (typeof agent.avatar === "string") return agent.avatar;
+  if (agent.avatar && typeof agent.avatar === "object" && "url" in agent.avatar) {
+    const url = (agent.avatar as { url?: string }).url;
+    if (url) return url;
+  }
+
+  return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(agent.name)}`;
+}
+
+export function AgentDetailModal({ agent, open, onClose }: AgentDetailModalProps) {
+  const { data: tasks = [], isLoading: tasksLoading, isError: tasksError } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => getTasks(),
+    enabled: open,
+  });
+
+  const {
+    data: activity = [],
+    isLoading: activityLoading,
+    isError: activityError,
+  } = useQuery({
+    queryKey: ["activity", { agentId: agent?.id, limit: 20 }],
+    queryFn: () => getActivity({ agentId: agent?.id, limit: 20 }),
+    enabled: open && !!agent?.id,
+  });
+
+  const filteredActivity = useMemo(() => {
+    if (!agent) return [];
+
+    return activity.filter((item) => {
+      if (item.actorType === "agent" && item.actorId) {
+        return item.actorId === agent.id;
+      }
+
+      return item.agentId === agent.id;
+    });
+  }, [activity, agent]);
+
+  const assignedTasks = useMemo(() => {
+    if (!agent) return [];
+    return tasks.filter((task) => {
+      const matchByObject = task.assignedAgent?.id === agent.id;
+      const matchByDirectId = task.assignedAgentId === agent.id;
+      const matchByOwner = task.ownerAgentId === agent.id;
+      const matchByName = task.assignedAgent?.name?.toLowerCase() === agent.name.toLowerCase();
+      return matchByObject || matchByDirectId || matchByOwner || matchByName;
+    });
+  }, [agent, tasks]);
+
+  const lastActivity = filteredActivity[0];
+
+  if (!open || !agent) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-xl border border-surface-700 bg-surface-900 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-surface-700 px-4 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={getAgentAvatarUrl(agent)}
+              alt={`${agent.name} avatar`}
+              className="h-7 w-7 shrink-0 rounded-full border border-surface-700 bg-surface-900 object-cover"
+            />
+            <h2 className="truncate text-sm font-semibold text-slate-100">{agent.name}</h2>
+            <StatusBadge status={agent.status} pulse={agent.status?.toUpperCase() === "RUNNING"} />
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-slate-300 hover:bg-surface-700"
+            aria-label="Close agent details"
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+
+        <div className="grid gap-4 p-4 lg:grid-cols-2 overflow-y-auto max-h-[calc(90vh-60px)]">
+          <Card title="Agent Overview" className="h-full">
+            <div className="space-y-2 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <span className="text-slate-500">Name</span>
+                <span className="text-slate-200">{agent.name}</span>
+                <span className="text-slate-500">Role</span>
+                <span className="text-slate-200">{agent.role ?? "—"}</span>
+                <span className="text-slate-500">Status message</span>
+                <span className="text-slate-200">{agent.statusMessage ?? "—"}</span>
+                <span className="text-slate-500">Last heartbeat</span>
+                <span className="text-slate-200">{fromNow(agent.heartbeat)}</span>
+              </div>
+
+              <div className="rounded border border-surface-700 bg-surface-800 p-2">
+                <p className="mb-1 text-[10px] uppercase tracking-wider text-slate-500">Last activity</p>
+                {!activityLoading && !lastActivity && (
+                  <p className="text-slate-400">No activity detected for this agent.</p>
+                )}
+                {activityLoading && <p className="text-slate-500">Loading activity…</p>}
+                {lastActivity && (() => {
+                  const visual = getActivityVisual(lastActivity);
+                  const actorLabel = getActivityActorLabel(lastActivity);
+
+                  return (
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                      <span className={cn("inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-semibold uppercase tracking-wide", visual.badgeClassName)}>
+                        <FontAwesomeIcon icon={visual.icon} className="text-[9px]" />
+                        {visual.label}
+                      </span>
+                      {actorLabel && (
+                        <span className="inline-flex items-center gap-1 rounded border border-surface-600 bg-surface-900 px-1.5 py-0.5 text-slate-300">
+                          <FontAwesomeIcon icon={faBolt} className="text-[9px]" />
+                          {actorLabel}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-200">
+                      {lastActivity.summary ?? lastActivity.type ?? lastActivity.event ?? lastActivity.action ?? lastActivity.kind ?? "Activity event"}
+                    </p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <FontAwesomeIcon icon={faClock} />
+                      {fromNow(lastActivity.occurredAt ?? lastActivity.createdAt ?? lastActivity.timestamp ?? lastActivity.updatedAt)}
+                    </p>
+                  </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Assigned Tasks" className="h-full">
+            {tasksLoading && <SkeletonList rows={4} />}
+            {tasksError && <ErrorMessage message="Failed to load tasks" />}
+            {!tasksLoading && !tasksError && assignedTasks.length === 0 && (
+              <EmptyState message="No tasks assigned" />
+            )}
+            {assignedTasks.length > 0 && (
+              <div className="space-y-2">
+                {assignedTasks.map((task) => (
+                  <div key={task.id} className="rounded border border-surface-700 bg-surface-800 p-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex items-center gap-1.5">
+                        <FontAwesomeIcon icon={faListCheck} className="text-cyan-400 text-[10px]" />
+                        <span className="truncate text-xs text-slate-100">{task.title}</span>
+                      </div>
+                      <StatusBadge status={task.status} />
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-500">updated {fromNow(task.updatedAt)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card title="Recent Agent Activity" className="h-full lg:col-span-2">
+            {activityLoading && <SkeletonList rows={4} />}
+            {activityError && <ErrorMessage message="Failed to load activity" />}
+            {!activityLoading && !activityError && filteredActivity.length === 0 && (
+              <EmptyState message="No recent activity" />
+            )}
+            {filteredActivity.length > 0 && (
+              <div className="space-y-1.5">
+                {filteredActivity.map((item, idx) => {
+                  const visual = getActivityVisual(item);
+                  const actorLabel = getActivityActorLabel(item);
+
+                  return (
+                    <div key={item.id ?? idx} className="rounded border border-surface-700 bg-surface-800 p-2">
+                      <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                        <span className={cn("inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-semibold uppercase tracking-wide", visual.badgeClassName)}>
+                          <FontAwesomeIcon icon={visual.icon} className="text-[9px]" />
+                          {visual.label}
+                        </span>
+                        {actorLabel && (
+                          <span className="inline-flex items-center gap-1 rounded border border-surface-600 bg-surface-900 px-1.5 py-0.5 text-slate-300">
+                            <FontAwesomeIcon icon={faBolt} className="text-[9px]" />
+                            {actorLabel}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-200 flex items-start gap-1.5">
+                        <FontAwesomeIcon icon={visual.icon} className={cn("mt-0.5 text-[10px]", visual.toneClassName)} />
+                        <span>{item.summary ?? item.type ?? item.event ?? item.action ?? item.kind ?? "Activity event"}</span>
+                      </p>
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        {fromNow(item.createdAt ?? item.timestamp ?? item.updatedAt ?? item.occurredAt)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

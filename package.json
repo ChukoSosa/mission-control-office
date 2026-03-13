@@ -3,14 +3,23 @@
   "version": "0.6.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/predev.js && next dev -p 3001",
+    "dev": "next dev -p 3001",
+    "dev:demo": "node scripts/dev-demo.js",
+    "dev:setup": "node scripts/predev.js && next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
     "setup": "node scripts/setup.js",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "dummy:set": "node scripts/restore-dummy.js",
+    "dummy:restore": "node scripts/restore-dummy.js",
+    "demo:db:setup": "node scripts/setup-demo-db.js",
+    "demo:db:seed": "tsx scripts/seed-demo-db.ts",
+    "demo:dummyset": "tsx scripts/seed-demo-db.ts",
+    "demo:db:reset": "npm run demo:db:setup ; npm run demo:db:seed",
+    "dist:build": "node scripts/build-dist.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -27,6 +36,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.35.2",
     "next": "^15.2.2",
+    "pg": "^8.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",

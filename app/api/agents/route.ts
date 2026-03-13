@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { agentService } from "@/app/api/server/agent-service";
 import { apiErrorResponse } from "@/app/api/server/api-error";
+import { isMissionControlDemoMode, demoReadOnlyResponse } from "@/app/api/server/demo-mode";
 
 export async function GET() {
   try {
@@ -13,6 +14,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isMissionControlDemoMode()) {
+      return demoReadOnlyResponse();
+    }
+
     const body = await request.json();
     const { agentId, status, statusMessage } = body;
 

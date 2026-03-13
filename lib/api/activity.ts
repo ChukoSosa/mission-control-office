@@ -7,6 +7,10 @@ import { MOCK_ACTIVITY } from "@/lib/mock/data";
 export interface ActivityParams {
   taskId?: string;
   agentId?: string;
+  subtaskId?: string;
+  commentId?: string;
+  actorId?: string;
+  actorType?: string;
   runId?: string;
   limit?: number;
 }
@@ -20,6 +24,18 @@ export async function getActivity(params: ActivityParams = {}): Promise<Activity
     if (params.agentId) {
       items = items.filter((item) => item.agentId === params.agentId);
     }
+    if (params.subtaskId) {
+      items = items.filter((item) => item.subtaskId === params.subtaskId);
+    }
+    if (params.commentId) {
+      items = items.filter((item) => item.commentId === params.commentId);
+    }
+    if (params.actorId) {
+      items = items.filter((item) => item.actorId === params.actorId);
+    }
+    if (params.actorType) {
+      items = items.filter((item) => item.actorType === params.actorType);
+    }
     if (params.runId) {
       items = items.filter((item) => item.runId === params.runId);
     }
@@ -32,6 +48,10 @@ export async function getActivity(params: ActivityParams = {}): Promise<Activity
   const qs = new URLSearchParams();
   if (params.taskId) qs.set("taskId", params.taskId);
   if (params.agentId) qs.set("agentId", params.agentId);
+  if (params.subtaskId) qs.set("subtaskId", params.subtaskId);
+  if (params.commentId) qs.set("commentId", params.commentId);
+  if (params.actorId) qs.set("actorId", params.actorId);
+  if (params.actorType) qs.set("actorType", params.actorType);
   if (params.runId) qs.set("runId", params.runId);
   if (params.limit) qs.set("limit", String(params.limit));
 

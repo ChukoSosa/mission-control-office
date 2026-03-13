@@ -4,6 +4,13 @@ import { apiErrorResponse } from "@/app/api/server/api-error";
 import { emitEvent } from "@/app/api/server/event-bus";
 import { activityService } from "@/app/api/server/activity-service";
 import { dispatchCommentReview } from "@/app/api/server/comment-automator";
+import { isMissionControlDemoMode, demoReadOnlyResponse } from "@/app/api/server/demo-mode";
+
+const OPERATOR_ACTOR = {
+  type: "human" as const,
+  id: "operator",
+  name: "Operator",
+};
 
 function clampLimit(value: string | null, fallback = 50) {
   const n = value ? Number.parseInt(value, 10) : fallback;
@@ -13,13 +20,14 @@ function clampLimit(value: string | null, fallback = 50) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const limit = clampLimit(request.nextUrl.searchParams.get("limit"), 50);
 
     const comments = await prisma.taskComment.findMany({
-      where: { taskId: params.id },
+      where: { taskId: id },
       orderBy: { createdAt: "asc" },
       take: limit,
     });
@@ -40,9 +48,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (isMissionControlDemoMode()) {
+      return demoReadOnlyResponse();
+    }
+
+    const { id } = await params;
     const payload = await request.json();
 
     const body = typeof payload?.body === "string" ? payload.body.trim() : "";
@@ -51,8 +64,8 @@ export async function POST(
     }
 
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
-      select: { id: true },
+      where: { id },
+      select: { id: true, title: true },
     });
 
     if (!task) {
@@ -67,7 +80,7 @@ export async function POST(
 
     const comment = await prisma.taskComment.create({
       data: {
-        taskId: params.id,
+        taskId: id,
         authorType,
         authorId: typeof payload?.authorId === "string" ? payload.authorId : null,
         body,
@@ -84,7 +97,7 @@ export async function POST(
       type: "task.comment.created",
       data: {
         commentId: comment.id,
-        taskId: params.id,
+        taskId: id,
         authorType: comment.authorType,
         authorId: comment.authorId ?? null,
         requiresResponse: comment.requiresResponse,
@@ -94,12 +107,13 @@ export async function POST(
 
     // Persist activity for audit trail and activity feed
     await activityService.log({
-      kind: "task",
+      kind: "comment",
       action: "comment.created",
-      summary: `Comment added to task ${params.id}`,
-      taskId: params.id,
+      summary: `Operator added a comment on task "${task.title}"`,
+      actor: OPERATOR_ACTOR,
+      taskId: id,
+      commentId: comment.id,
       payload: {
-        commentId: comment.id,
         authorType: comment.authorType,
         requiresResponse: comment.requiresResponse,
       },
@@ -107,7 +121,7 @@ export async function POST(
 
     // Fire-and-forget: OpenClaw Main reviews comment and replies automatically
     dispatchCommentReview({
-      taskId: params.id,
+      taskId: id,
       commentId: comment.id,
       commentBody: comment.body,
       authorType: comment.authorType,
