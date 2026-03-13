@@ -145,6 +145,14 @@ Cuando MC Lucy se instala en un entorno remoto de cliente:
 3. El arranque inicial no usa mock data.
 4. Se inicia con API real + task de onboarding + agente default `OpenClaw` (Main).
 
+Por defecto este repo corre en modo **app-only** (`APP_ONLY_INSTALL=true`).
+Eso redirige `/web/*`, `/welcome` y `/thank-you` hacia `/app`.
+
+Si necesitás habilitar páginas web/marketing explícitamente:
+```env
+APP_ONLY_INSTALL="false"
+```
+
 ## Arquitectura
 
 Front y API corren en el mismo proceso Next.js:
