@@ -49,7 +49,7 @@ function AgentBubbleComponent({
     >
       <div
         className={cn(
-          "relative h-14 w-14 rounded-full border border-surface-700 bg-surface-900/95",
+          "relative h-14 w-14 overflow-hidden rounded-full border border-surface-700 bg-surface-900/95",
           state.ringClassName,
           state.pulse && "animate-pulse-slow",
         )}
@@ -62,7 +62,7 @@ function AgentBubbleComponent({
             height={112}
             unoptimized
             onError={() => setImageFailed(true)}
-            className="h-full w-full rounded-full object-cover object-top image-rendering-pixelated"
+            className="h-full w-full object-cover object-[50%_50%] scale-150 image-rendering-pixelated"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center rounded-full bg-surface-800 text-xs font-bold text-cyan-300">

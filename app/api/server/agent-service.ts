@@ -65,4 +65,58 @@ export const agentService = {
 
     return agent;
   },
+
+  async updateAvatar(
+    agentId: string,
+    payload: { avatarUrl: string; prompt?: string; variant?: string; traits?: Record<string, unknown> },
+  ) {
+    assertDemoWritable();
+
+    const avatarUrl = payload.avatarUrl.trim();
+    if (!avatarUrl) {
+      throw new ApiError(400, "BAD_REQUEST", "avatarUrl is required");
+    }
+
+    let agent;
+    try {
+      agent = await prisma.agent.update({
+        where: { id: agentId },
+        data: {
+          avatar: avatarUrl,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        throw new ApiError(404, "NOT_FOUND", "Agent not found");
+      }
+      throw error;
+    }
+
+    emitEvent({
+      type: "agent.avatar",
+      data: {
+        id: agent.id,
+        avatarUrl,
+      },
+    });
+
+    await activityService.log({
+      kind: "agent",
+      action: "agent.avatar.updated",
+      summary: `${agent.name} avatar updated`,
+      actor: {
+        type: "human",
+        id: "operator",
+        name: "Operator",
+      },
+      agentId: agent.id,
+      payload: {
+        variant: payload.variant ?? "pixel-random",
+        prompt: payload.prompt ?? null,
+        traits: payload.traits ?? null,
+      },
+    });
+
+    return agent;
+  },
 };
