@@ -28,30 +28,41 @@ export default function PaymentPage() {
 
       {/* ── Section 1: Hero ── */}
       <header className="space-y-4 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">Mission Control</p>
-        <h1 className="text-4xl font-semibold text-white sm:text-5xl">Get MC Lucy</h1>
-        <p className="text-lg font-medium text-slate-300">Run your own Mission Control for AI agents.</p>
-        <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-400">
-          MC Lucy gives you a clear operational view of what your agents are doing, what is blocked, and what just changed.
-          <br />
-          <span className="text-slate-300">No guessing. No invisible work.</span>
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 pt-2">
-          <Link
-            href="/app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-md bg-cyan-400 px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-cyan-300"
-          >
-            View Live Demo
-          </Link>
-          <Link
-            href="/web/welcome"
-            className="rounded-md border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200"
-          >
-            Read the Manual
-          </Link>
+        
+        <div className="flex flex-row items-center gap-10">
+          <div className="flex flex-col">
+            <div className="rounded-md border border-slate-700 bg-slate-900/50 p-4">
+              <img src="\office\mcmonkes-library\001.png" width={420}  alt="MC Lucy" />
+            </div>            
+          </div>
+          <div className="flex flex-col gap-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">Mission Control</p>
+            <h1 className="text-4xl font-semibold text-white sm:text-5xl">Get MC Lucy</h1>
+            <p className="text-lg font-medium text-slate-300">Run your own Mission Control for AI agents.</p>
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-slate-400">
+              MC Lucy gives you a clear operational view of what your agents are doing, what is blocked, and what just changed.
+              <br />
+              <span className="text-slate-300">No guessing. No invisible work.</span>
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
+              <Link
+                href="/app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-md bg-cyan-400 px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-cyan-300"
+              >
+                View Live Demo
+              </Link>
+              <Link
+                href="/web/welcome"
+                className="rounded-md border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200"
+              >
+                Read the Manual
+              </Link>
+            </div>
+          </div>
         </div>
+      
       </header>
 
       {/* ── Section 2: The $3 Story ── */}
