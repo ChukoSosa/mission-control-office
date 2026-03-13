@@ -343,6 +343,11 @@ HTTP POST /api/agents/heartbeat
 **Trigger**: Task can't be completed by assigned agent  
 **Action**: Mark as REVIEW and notify
 
+Prerequisite before moving to `REVIEW`:
+- Ticket folder exists: `outputs/task-###/`
+- Evidence exists in: `outputs/task-###/output/`
+- At least one file is present in `output/` (direct or nested)
+
 ```
 HTTP PATCH /api/tasks/<task-id>
 {
@@ -363,6 +368,10 @@ POST /api/tasks/<task-id>/comments
 - ✅ Task moved to REVIEW (work in progress but needs input)
 - ✅ Supervisor sees it needs attention
 - ✅ Can loop back to planning
+
+Important lifecycle rule:
+- ✅ All tasks must pass through REVIEW before DONE
+- ❌ Direct move to DONE without REVIEW is rejected by API
 
 ---
 

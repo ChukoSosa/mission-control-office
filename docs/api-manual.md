@@ -173,6 +173,16 @@ Respuesta: `{ "task": TaskSummary }` con `priority` en rango `1..5`.
 **PATCH /api/tasks/:id**
 Campos permitidos: `title`, `description`, `status`, `assignedAgentId`, `priority`.
 
+Reglas de transición:
+- No se puede mover una task a `REVIEW` si no existe al menos 1 archivo dentro de `outputs/{ticket}/output/`.
+- Toda task debe pasar por `REVIEW` antes de `DONE`.
+
+Convención de ticket/evidencia:
+- El sistema asigna automáticamente un ticket secuencial (`task-001`, `task-002`, ...).
+- Al crear la task, se crean automáticamente:
+  - `outputs/{ticket}/input/`
+  - `outputs/{ticket}/output/`
+
 ```bash
 curl -X PATCH http://localhost:3001/api/tasks/<taskId> \
   -H 'Content-Type: application/json' \

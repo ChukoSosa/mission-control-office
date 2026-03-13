@@ -4,6 +4,12 @@ import { emitEvent } from "./event-bus";
 import { activityService } from "./activity-service";
 import { ApiError } from "./api-error";
 import { assertDemoWritable } from "./demo-mode";
+import {
+  computeNextTicketCode,
+  ensureEvidenceFolders,
+  outputHasEvidenceFile,
+  parseExistingTicketCode,
+} from "./task-output";
 
 const OPERATOR_ACTOR = {
   type: "human" as const,
@@ -79,7 +85,22 @@ function toPrismaTaskStatus(status: string) {
   return status as unknown as any;
 }
 
+function asObjectMetadata(value: unknown): Record<string, unknown> {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
 export const taskService = {
+  async reserveNextTicketCode() {
+    const tasks = await prisma.task.findMany({
+      select: { metadata: true },
+    });
+
+    return computeNextTicketCode(tasks.map((task) => task.metadata));
+  },
+
   async list(options?: {
     status?: string;
     assignedAgentId?: string;
@@ -160,6 +181,9 @@ export const taskService = {
       }
     }
 
+    const ticketCode = await this.reserveNextTicketCode();
+    await ensureEvidenceFolders(ticketCode);
+
     const task = await prisma.task.create({
       data: {
         title: data.title,
@@ -170,6 +194,14 @@ export const taskService = {
         createdById: "operator-root",
         assignedAgentId: data.assignedAgentId,
         pipelineStageId: data.pipelineStageId,
+        metadata: {
+          ticketCode,
+          evidence: {
+            base: `outputs/${ticketCode}`,
+            input: `outputs/${ticketCode}/input`,
+            output: `outputs/${ticketCode}/output`,
+          },
+        },
       },
       include: {
         assignedAgent: { select: { id: true, name: true } },
@@ -189,7 +221,7 @@ export const taskService = {
       actor: OPERATOR_ACTOR,
       taskId: task.id,
       agentId: task.assignedAgentId ?? undefined,
-      payload: { status: task.status, priority: task.priority },
+      payload: { status: task.status, priority: task.priority, ticketCode },
     });
 
     return task;
@@ -203,7 +235,7 @@ export const taskService = {
 
     const existing = await prisma.task.findUnique({
       where: { id },
-      select: { id: true, title: true, status: true, assignedAgentId: true },
+      select: { id: true, title: true, status: true, assignedAgentId: true, metadata: true },
     });
 
     if (!existing) {
@@ -221,6 +253,49 @@ export const taskService = {
       }
     }
 
+    let ticketCode = parseExistingTicketCode(existing.metadata);
+    let metadataUpdate: Record<string, unknown> | undefined;
+
+    if (!ticketCode) {
+      ticketCode = await this.reserveNextTicketCode();
+      await ensureEvidenceFolders(ticketCode);
+      const existingMetadata = asObjectMetadata(existing.metadata);
+      metadataUpdate = {
+        ...existingMetadata,
+        ticketCode,
+        evidence: {
+          base: `outputs/${ticketCode}`,
+          input: `outputs/${ticketCode}/input`,
+          output: `outputs/${ticketCode}/output`,
+        },
+      };
+    }
+
+    if (updates.status === "REVIEW") {
+      await ensureEvidenceFolders(ticketCode);
+      const hasEvidence = await outputHasEvidenceFile(ticketCode);
+      if (!hasEvidence) {
+        throw new ApiError(
+          400,
+          "VALIDATION_ERROR",
+          `Cannot move task to REVIEW without evidence in outputs/${ticketCode}/output`,
+          {
+            ticketCode,
+            requiredOutputPath: `outputs/${ticketCode}/output`,
+            rule: "Add at least one file to output before REVIEW",
+          },
+        );
+      }
+    }
+
+    if (updates.status === "DONE" && existing.status !== "REVIEW") {
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Cannot move task to DONE unless current status is REVIEW",
+      );
+    }
+
     let task;
     try {
       task = await prisma.task.update({
@@ -231,6 +306,7 @@ export const taskService = {
           status: updates.status ? toPrismaTaskStatus(updates.status) : undefined,
           assignedAgentId: updates.assignedAgentId === undefined ? undefined : updates.assignedAgentId,
           priority: typeof updates.priority === "number" ? updates.priority : undefined,
+          metadata: metadataUpdate as Prisma.InputJsonValue | undefined,
         },
         include: { assignedAgent: { select: { id: true, name: true } } },
       });
@@ -269,6 +345,7 @@ export const taskService = {
       agentId: task.assignedAgentId ?? undefined,
       payload: {
         status: task.status,
+        ticketCode,
         ...activity.payload,
       },
     });
