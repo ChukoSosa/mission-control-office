@@ -15,7 +15,7 @@ Toda actividad relevante debe quedar registrada.
 
 ## Tu base de operaciones
 
-MC Lucy corre en: http://192.168.0.17:3001
+MC Lucy corre en: {{MC_LUCY_BASE_URL}}
 Todos los endpoints son JSON. Content-Type: application/json.
 Tu agentId es el que tenés registrado en la base de datos.
 

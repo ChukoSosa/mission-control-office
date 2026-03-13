@@ -89,7 +89,10 @@ async function main() {
     where: { id: ONBOARDING_TASK_ID },
     update: {
       title: "Installation / Onboarding",
-      description: "Track initial setup and onboarding steps performed by OpenClaw.",
+      description:
+        "This is your first task. Execute each subtask in order to complete the onboarding flow. " +
+        "Your operating instructions are in the system comment on this task. " +
+        "When all subtasks are DONE, move this card to DONE.",
       status: "IN_PROGRESS",
       priority: 1,
       createdById: operator.id,
@@ -99,7 +102,10 @@ async function main() {
     create: {
       id: ONBOARDING_TASK_ID,
       title: "Installation / Onboarding",
-      description: "Track initial setup and onboarding steps performed by OpenClaw.",
+      description:
+        "This is your first task. Execute each subtask in order to complete the onboarding flow. " +
+        "Your operating instructions are in the system comment on this task. " +
+        "When all subtasks are DONE, move this card to DONE.",
       status: "IN_PROGRESS",
       priority: 1,
       createdById: operator.id,
@@ -131,7 +137,7 @@ async function main() {
       {
         id: "subtask-onboarding-1",
         taskId: ONBOARDING_TASK_ID,
-        title: "Verify API and database connectivity",
+        title: "Verify connectivity — GET /api/system/state (wait for READY) then GET /api/health",
         status: "TODO",
         position: 1,
         ownerAgentId: openClaw.id,
@@ -139,7 +145,7 @@ async function main() {
       {
         id: "subtask-onboarding-2",
         taskId: ONBOARDING_TASK_ID,
-        title: "Create initial workspace configuration",
+        title: "Read your operating instructions — GET /api/tasks/{id}/comments and read the system comment body",
         status: "TODO",
         position: 2,
         ownerAgentId: openClaw.id,
@@ -147,7 +153,7 @@ async function main() {
       {
         id: "subtask-onboarding-3",
         taskId: ONBOARDING_TASK_ID,
-        title: "Register additional assistant profiles",
+        title: "Send initial heartbeat — POST /api/agents/heartbeat with status IDLE",
         status: "TODO",
         position: 3,
         ownerAgentId: openClaw.id,
@@ -155,7 +161,7 @@ async function main() {
       {
         id: "subtask-onboarding-4",
         taskId: ONBOARDING_TASK_ID,
-        title: "Validate board and office views",
+        title: "Connect to event stream — open persistent SSE connection to GET /api/events",
         status: "TODO",
         position: 4,
         ownerAgentId: openClaw.id,
@@ -163,7 +169,7 @@ async function main() {
       {
         id: "subtask-onboarding-5",
         taskId: ONBOARDING_TASK_ID,
-        title: "Finalize onboarding checklist",
+        title: "Complete onboarding — PATCH this task to DONE with evidence: endpoints verified, SSE active, ready to operate",
         status: "TODO",
         position: 5,
         ownerAgentId: openClaw.id,

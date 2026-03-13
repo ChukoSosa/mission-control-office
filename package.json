@@ -18,7 +18,8 @@
     "demo:db:setup": "node scripts/setup-demo-db.js",
     "demo:db:seed": "tsx scripts/seed-demo-db.ts",
     "demo:dummyset": "tsx scripts/seed-demo-db.ts",
-    "demo:db:reset": "npm run demo:db:setup ; npm run demo:db:seed"
+    "demo:db:reset": "npm run demo:db:setup ; npm run demo:db:seed",
+    "dist:build": "node scripts/build-dist.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
