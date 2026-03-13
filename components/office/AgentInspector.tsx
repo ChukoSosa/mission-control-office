@@ -17,6 +17,7 @@ interface AgentInspectorProps {
   generating: boolean;
   avatarError?: string | null;
   onGenerateAvatar?: () => void;
+  title?: string;
 }
 
 export function AgentInspector({
@@ -29,6 +30,7 @@ export function AgentInspector({
   generating,
   avatarError,
   onGenerateAvatar,
+  title = "Agent Inspector",
 }: AgentInspectorProps) {
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -45,7 +47,7 @@ export function AgentInspector({
   }
 
   return (
-    <Card title="Agent Inspector" className="h-full" bodyClassName="space-y-2.5 text-xs">
+    <Card title={title} className="h-full" bodyClassName="space-y-2.5 text-xs">
       {/* Avatar — full width, prominent */}
       <div className="relative h-52 w-full">
         {avatarUrl && !imageFailed ? (

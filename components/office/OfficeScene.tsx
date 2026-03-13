@@ -23,33 +23,33 @@ interface OfficeSceneProps {
 
 function OfficeSceneComponent({ agents, onSelectAgent, onReachedPosition }: OfficeSceneProps) {
   return (
-    <section className="relative h-[78vh] min-h-[560px] overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/office/office-bg.svg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          imageRendering: "pixelated",
-        }}
-      />
-
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-surface-950/20 via-transparent to-surface-950/45" />
-
-      {agents.map((item) => (
-        <AgentBubble
-          key={item.agent.id}
-          agent={item.agent}
-          task={item.task}
-          x={item.x}
-          y={item.y}
-          avatarUrl={item.avatarUrl}
-          isGenerating={item.isGenerating}
-          state={item.state}
-          onClick={() => onSelectAgent(item.agent.id)}
-          onReachedPosition={() => onReachedPosition(item.agent.id)}
+    <section className="flex h-[78vh] min-h-[560px] items-center justify-center overflow-hidden rounded-xl border border-surface-700 bg-surface-900">
+      <div className="relative h-full w-auto aspect-square">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/office/imgs/office-bg.png"
+          alt="Office background"
+          className="h-full w-auto max-w-none object-contain image-rendering-pixelated"
+          draggable={false}
         />
-      ))}
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-surface-950/10 via-transparent to-surface-950/35" />
+
+        {agents.map((item) => (
+          <AgentBubble
+            key={item.agent.id}
+            agent={item.agent}
+            task={item.task}
+            x={item.x}
+            y={item.y}
+            avatarUrl={item.avatarUrl}
+            isGenerating={item.isGenerating}
+            state={item.state}
+            onClick={() => onSelectAgent(item.agent.id)}
+            onReachedPosition={() => onReachedPosition(item.agent.id)}
+          />
+        ))}
+      </div>
     </section>
   );
 }

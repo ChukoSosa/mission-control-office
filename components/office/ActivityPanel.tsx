@@ -14,9 +14,10 @@ import { getActivityActorLabel, getActivityVisual } from "@/lib/activity/present
 interface ActivityPanelProps {
   selectedAgentId: string | null;
   selectedAgentName?: string | null;
+  showAllActivity?: boolean;
 }
 
-export function ActivityPanel({ selectedAgentId, selectedAgentName }: ActivityPanelProps) {
+export function ActivityPanel({ selectedAgentId, selectedAgentName, showAllActivity = false }: ActivityPanelProps) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["office-activity"],
     queryFn: () => getActivity({ limit: 100 }),
@@ -25,6 +26,7 @@ export function ActivityPanel({ selectedAgentId, selectedAgentName }: ActivityPa
 
   const activity = useMemo(() => {
     const items = data ?? [];
+    if (showAllActivity) return items;
     if (!selectedAgentId) return [];
 
     return items.filter((item) => {
@@ -42,12 +44,12 @@ export function ActivityPanel({ selectedAgentId, selectedAgentName }: ActivityPa
       className="h-full"
       bodyClassName="space-y-2"
     >
-      {!selectedAgentId && !isLoading && !isError && (
+      {!selectedAgentId && !showAllActivity && !isLoading && !isError && (
         <p className="text-xs text-slate-400">Select an agent in the office to view their activity.</p>
       )}
       {isLoading && <p className="text-xs text-slate-400">Loading activity...</p>}
       {isError && <p className="text-xs text-accent-red">Failed to load activity.</p>}
-      {!isLoading && !isError && !!selectedAgentId && activity.length === 0 && (
+      {!isLoading && !isError && (!!selectedAgentId || showAllActivity) && activity.length === 0 && (
         <p className="text-xs text-slate-400">No recent activity.</p>
       )}
 

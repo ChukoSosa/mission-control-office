@@ -29,6 +29,15 @@ import { getRealtimeRefetchInterval, isPublicDemoMode } from "@/lib/utils/demoMo
 
 const EMPTY_AGENTS: Agent[] = [];
 const EMPTY_TASKS: Task[] = [];
+const MCLUCY_ID = "mclucy-chief";
+const MCLUCY_AGENT: Agent = {
+  id: MCLUCY_ID,
+  name: "mcLUCY",
+  role: "Chief Mission Control",
+  status: "WORKING",
+  statusMessage: "Overseeing all operations",
+  avatarUrl: "/office/imgs/mclucy-avatar.png",
+};
 
 export default function OfficePage() {
   const demoMode = isPublicDemoMode();
@@ -84,13 +93,24 @@ export default function OfficePage() {
   const seatAssignments = useMemo(() => resolveSeatAssignments(agents), [agents]);
 
   const derived = useMemo(() => {
-    return agents.map((agent) => {
+    const baseAgents = agents.map((agent) => {
       const sceneState = normalizeSceneState(agent);
       const baseZone = resolveBaseZone(agent, seatAssignments);
       const targetZone = resolveTargetZoneFromState(sceneState.state, baseZone);
       const task = resolveCurrentTask(agent, tasks);
       return { agent, sceneState, baseZone, targetZone, task };
     });
+
+    return [
+      {
+        agent: MCLUCY_AGENT,
+        sceneState: normalizeSceneState(MCLUCY_AGENT),
+        baseZone: "chief-desk" as ZoneId,
+        targetZone: "chief-desk" as ZoneId,
+        task: null,
+      },
+      ...baseAgents,
+    ];
   }, [agents, seatAssignments, tasks]);
 
   useEffect(() => {
@@ -133,6 +153,10 @@ export default function OfficePage() {
   const selectedAssignedTasks = useMemo(() => {
     if (!selected) return [];
 
+    if (selected.agent.id === MCLUCY_ID) {
+      return tasks;
+    }
+
     return tasks.filter((task) => {
       return (
         task.assignedAgentId === selected.agent.id ||
@@ -143,7 +167,7 @@ export default function OfficePage() {
   }, [selected, tasks]);
 
   const handleGenerateAvatar = async () => {
-    if (!selected) return;
+    if (!selected || selected.agent.id === MCLUCY_ID) return;
 
     setGeneratingAgentId(selected.agent.id);
     setAvatarError(null);
@@ -191,7 +215,8 @@ export default function OfficePage() {
             avatarUrl={selected ? avatarMapping[selected.agent.id] ?? resolveAgentAvatarUrl(selected.agent) : undefined}
             generating={generatingAgentId === selected?.agent.id}
             avatarError={avatarError}
-            onGenerateAvatar={demoMode ? undefined : handleGenerateAvatar}
+            onGenerateAvatar={demoMode || selected?.agent.id === MCLUCY_ID ? undefined : handleGenerateAvatar}
+            title={selected?.agent.id === MCLUCY_ID ? "Mission Control Inspector" : "Agent Inspector"}
           />
         </section>
 
@@ -199,6 +224,7 @@ export default function OfficePage() {
           <ActivityPanel
             selectedAgentId={selectedAgentId}
             selectedAgentName={selected?.agent.name ?? null}
+            showAllActivity={selected?.agent.id === MCLUCY_ID}
           />
         </section>
       </div>
