@@ -253,12 +253,13 @@ export function buildMainAgentResponseDraft(
 
   if (decision.decision === "ask_for_clarification") {
     return {
-      title: "Cuéntame un poco más",
-      message: "Recibí tu mensaje pero necesito más detalle para crear la tarea correctamente. Respondé estas preguntas:",
+      title: "mcLucy necesita más detalle",
+      message: "Soy mcLucy (scrum master/PM del Mission Control) y necesito estos datos para mantener el board sano antes de arrancar:",
       bulletPoints: warnings.length > 0 ? warnings : ["El pedido es ambiguo sin más contexto."],
       followUpQuestions: [
         "¿Cuál es el objetivo concreto?",
-        "¿Cuál es el resultado esperado o criterio de completitud?",
+        "¿Cuál es el input/material necesario para empezar?",
+        "¿Cuál es el resultado esperado o criterio de completitud medible?",
         "¿Quién debería encargarse de esto?",
       ],
       tone: "clarifying",
@@ -278,7 +279,7 @@ export function buildMainAgentResponseDraft(
     if (executionResult.stage === "subtasks_created" && executionResult.success) {
       return {
         title: "¡Tarea creada exitosamente!",
-        message: "La tarea y sus subtareas fueron creadas en MC LUCY.",
+        message: "La tarea y sus subtareas fueron creadas en MC-MONKEYS.",
         bulletPoints: [
           `ID de tarea: ${executionResult.taskId ?? "n/a"}`,
           `Subtareas creadas: ${executionResult.subtasksCreatedCount}`,
@@ -303,7 +304,7 @@ export function buildMainAgentResponseDraft(
 
   return {
     title: "Tarea lista para crear",
-    message: "El pedido es válido y puede procesarse en MC LUCY.",
+    message: "El pedido es válido y puede procesarse en MC-MONKEYS.",
     bulletPoints: warnings.length > 0 ? warnings : ["Sin advertencias detectadas."],
     tone: "confirming",
   };
