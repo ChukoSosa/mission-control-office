@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata = {
   title: "MC-MONKEYS | Story",
@@ -40,9 +41,11 @@ export default function StoryPage() {
       {/* ── Section 2: The Moment of Frustration ── */}
       <section className="mb-14">
         <div className="mb-8 flex justify-center">
-          <img
+          <Image
             src="/office/imgs/scenes/3dolarstory.png"
             alt="Illustration of the $3 story"
+            width={420}
+            height={420}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-2 shadow-lg max-w-xs"
           />
         </div>
