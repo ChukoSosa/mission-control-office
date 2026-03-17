@@ -49,6 +49,7 @@ export function DashboardShell({ children, showFilters = true, topBar }: Dashboa
   const demoMode = isPublicDemoMode();
   const mainRef = useRef<HTMLElement | null>(null);
   const settingsMenuRef = useRef<HTMLDivElement | null>(null);
+  const hasInitializedSetupRef = useRef(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [pendingModalTop, setPendingModalTop] = useState<number | null>(null);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
@@ -62,11 +63,15 @@ export function DashboardShell({ children, showFilters = true, topBar }: Dashboa
 
   useEffect(() => {
     if (!isWorkspaceReady) return;
+    if (hasInitializedSetupRef.current) return;
+
+    // Mark that we've initialized to prevent re-opening the modal
+    hasInitializedSetupRef.current = true;
 
     if (requiresInitialSetup) {
       setSetupModalMode("first-run");
+      setIsSetupModalOpen(true);
     }
-    setIsSetupModalOpen(requiresInitialSetup);
   }, [isWorkspaceReady, requiresInitialSetup]);
 
   useEffect(() => {

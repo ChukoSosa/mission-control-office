@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolderOpen, faGear, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils/cn";
+import { validateOutputFolderPath } from "@/lib/utils/useOutputFolderPreference";
 
 interface FirstRunSetupModalProps {
   open: boolean;
@@ -33,7 +34,7 @@ export function FirstRunSetupModal({
     if (!open) return;
     setPathInput(initialPath);
     setPickerHint("");
-  }, [initialPath, open]);
+  }, [open]);
 
   const canUseDirectoryPicker = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -57,6 +58,7 @@ export function FirstRunSetupModal({
 
   const normalizedPath = pathInput.trim();
   const isSettingsMode = mode === "settings";
+  const pathValidation = validateOutputFolderPath(normalizedPath);
 
   const handlePickFolder = async () => {
     setPickerHint("");
@@ -68,9 +70,13 @@ export function FirstRunSetupModal({
     try {
       const handle = await picker();
       setPathInput((current) => current.trim() || handle.name);
-      setPickerHint(`Folder selected: ${handle.name}. If needed, replace with full path.`);
-    } catch {
-      // User canceled or browser blocked picker.
+      setPickerHint("Folder selected. You can edit or confirm as-is.");
+    } catch (error) {
+      // User canceled or error occurred
+      if (error instanceof Error) {
+        const errorMsg = error.message || "Could not access file system";
+        setPickerHint(`Error: ${errorMsg}`);
+      }
     }
   };
 
@@ -126,8 +132,18 @@ export function FirstRunSetupModal({
               value={pathInput}
               onChange={(event) => setPathInput(event.target.value)}
               placeholder="Example: C:\\mcmonkeys"
-              className="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-500"
+              className={cn(
+                "w-full rounded-lg bg-surface-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition",
+                normalizedPath === ""
+                  ? "border border-surface-600 focus:border-cyan-500"
+                  : pathValidation.valid
+                    ? "border border-green-500/50 focus:border-green-400"
+                    : "border border-red-500/50 focus:border-red-400"
+              )}
             />
+            {normalizedPath && !pathValidation.valid && (
+              <p className="text-xs text-red-400">{pathValidation.error}</p>
+            )}
           </label>
 
           <div className="flex flex-wrap gap-2">
@@ -162,10 +178,10 @@ export function FirstRunSetupModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!normalizedPath}
+            disabled={!normalizedPath || !pathValidation.valid}
             className={cn(
               "inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold uppercase tracking-wider transition",
-              normalizedPath
+              normalizedPath && pathValidation.valid
                 ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                 : "cursor-not-allowed bg-surface-700 text-slate-500",
             )}
