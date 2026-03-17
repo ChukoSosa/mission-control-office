@@ -258,6 +258,11 @@ export function DashboardShell({ children, showFilters = true, topBar }: Dashboa
         onSave={(path) => {
           setOutputFolderPath(path);
           markOnboardingSeen();
+          fetch("/api/system/config/outputs-root", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ outputFolderPath: path }),
+          }).catch(console.error);
           setIsSetupModalOpen(false);
         }}
         onClose={() => {
