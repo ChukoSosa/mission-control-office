@@ -17,6 +17,7 @@ const PaymentSchema = z.object({
 
 export default function PaymentPage() {
   const router = useRouter();
+  const isPaymentEnabled = process.env.NEXT_PUBLIC_ENABLE_PAYMENT_ACTIVATION === "true";
   const [plan, setPlan] = useState<Plan>("annual");
   const [imageIndex, setImageIndex] = useState(0);
   const [cardholder, setCardholder] = useState("");
@@ -58,6 +59,12 @@ export default function PaymentPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!isPaymentEnabled) {
+      setFormError("Activation is temporarily unavailable.");
+      return;
+    }
+
     setFormError(null);
 
     const parsed = PaymentSchema.safeParse({
@@ -302,11 +309,16 @@ export default function PaymentPage() {
           )}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isPaymentEnabled}
             className="w-full rounded-md bg-cyan-400 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-cyan-300 disabled:opacity-60"
           >
             {isSubmitting ? "Activating…" : "Activate Mission Control"}
           </button>
+          {!isPaymentEnabled && (
+            <p className="text-center text-xs font-medium text-amber-300">
+              Activation is temporarily unavailable.
+            </p>
+          )}
           <p className="text-center text-[11px] text-slate-600">
             This is a demo checkout. Payment gateway integration will be added next.
           </p>
