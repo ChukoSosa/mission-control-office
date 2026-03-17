@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolderOpen, faGear, faStar, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils/cn";
-import { validateOutputFolderPath } from "@/lib/utils/useOutputFolderPreference";
+import { validateOutputFolderPath } from "@/lib/utils/outputFolderPathValidation";
 
 interface FirstRunSetupModalProps {
   open: boolean;
