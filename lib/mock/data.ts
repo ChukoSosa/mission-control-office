@@ -7,7 +7,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Primary Mission Operator",
     status: "WORKING",
     statusMessage: "Driving active implementation tasks",
-    avatarUrl: "/office/demo/claudio.svg",
+    avatarUrl: "/office/mcmonkes-library/013.png",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -16,7 +16,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Execution Specialist",
     status: "THINKING",
     statusMessage: "Designing subtask execution strategy",
-    avatarUrl: "/office/demo/ninja.svg",
+    avatarUrl: "/office/mcmonkes-library/012.png",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -25,7 +25,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Code Quality Operator",
     status: "IDLE",
     statusMessage: "Waiting for next assignment",
-    avatarUrl: "/office/demo/codi.svg",
+    avatarUrl: "/office/mcmonkes-library/009.png",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -34,7 +34,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Mission Coordination Assistant",
     status: "WORKING",
     statusMessage: "Handling installation onboarding",
-    avatarUrl: "/office/mcmonkes-library/005.png",
+    avatarUrl: "/office/mcmonkes-library/006.png",
     heartbeatAt: new Date().toISOString(),
   },
 ];
