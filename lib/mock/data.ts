@@ -16,8 +16,10 @@ export const MOCK_AGENTS: Agent[] = [
     id: "agent-ninja",
     name: "Ninja",
     role: "Execution Specialist",
-    status: "THINKING",
-    statusMessage: "Designing subtask execution strategy",
+    status: IS_PUBLIC_DEMO ? "BLOCKED" : "WORKING",
+    statusMessage: IS_PUBLIC_DEMO
+      ? "Blocked waiting for external dependency"
+      : "Executing assigned tasks",
     avatarUrl: "/office/mcmonkes-library/012.png",
     heartbeatAt: new Date().toISOString(),
   },
@@ -25,8 +27,8 @@ export const MOCK_AGENTS: Agent[] = [
     id: "agent-codi",
     name: "Codi",
     role: "Code Quality Operator",
-    status: "IDLE",
-    statusMessage: "Waiting for next assignment",
+    status: "WORKING",
+    statusMessage: "Executing code quality checks",
     avatarUrl: "/office/mcmonkes-library/009.png",
     heartbeatAt: new Date().toISOString(),
   },
@@ -34,8 +36,10 @@ export const MOCK_AGENTS: Agent[] = [
     id: "agent-tammy",
     name: "Tammy",
     role: "Mission Coordination Assistant",
-    status: "WORKING",
-    statusMessage: IS_PUBLIC_DEMO ? "Coordinating live mission demo" : "Handling installation onboarding",
+    status: IS_PUBLIC_DEMO ? "THINKING" : "WORKING",
+    statusMessage: IS_PUBLIC_DEMO
+      ? "Analyzing mission coordination options"
+      : "Handling installation onboarding",
     avatarUrl: "/office/mcmonkes-library/006.png",
     heartbeatAt: new Date().toISOString(),
   },

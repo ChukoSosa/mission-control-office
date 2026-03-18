@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/mission-control/dashboard/DashboardShell";
 import { getAgents } from "@/lib/api/agents";
@@ -23,6 +24,7 @@ import {
   resolveAgentAvatarUrl,
   saveAvatarMappingToStorage,
 } from "@/lib/office/avatarGenerator";
+import { MOCK_AGENTS, MOCK_TASKS } from "@/lib/mock/data";
 import type { Agent, Task } from "@/types";
 import { getRealtimeRefetchInterval, isPublicDemoMode } from "@/lib/utils/demoMode";
 
@@ -31,6 +33,118 @@ const EMPTY_TASKS: Task[] = [];
 const MCLUCY_ID = "mclucy-chief";
 const MCLUCY_AVATAR_URL = "/office/mcmonkes-library/001.png";
 const MCLUCY_ZONE: ZoneId = "barko-office";
+
+type OfficeScenario =
+  | "live"
+  | "all-working"
+  | "three-working-one-blocked"
+  | "mixed-thinking-blocked"
+  | "mixed-idle-reviewing-thinking";
+
+function normalizeAgentName(agent: Agent): string {
+  return (agent.name ?? "").trim().toLowerCase();
+}
+
+function isClaudio(agent: Agent): boolean {
+  return normalizeAgentName(agent).includes("claudio");
+}
+
+function applyScenarioToAgent(agent: Agent, scenario: OfficeScenario): Agent {
+  if (scenario === "live") return agent;
+
+  const name = normalizeAgentName(agent);
+
+  if (scenario === "all-working") {
+    return {
+      ...agent,
+      status: "WORKING",
+      statusMessage: "Working from assigned workstation",
+    };
+  }
+
+  if (scenario === "three-working-one-blocked") {
+    if (name.includes("tammy")) {
+      return {
+        ...agent,
+        status: "BLOCKED",
+        statusMessage: "Dependency pending to continue",
+      };
+    }
+
+    return {
+      ...agent,
+      status: "WORKING",
+      statusMessage: "Working from assigned workstation",
+    };
+  }
+
+  if (scenario === "mixed-thinking-blocked") {
+    if (name.includes("ninja")) {
+      return {
+        ...agent,
+        status: "THINKING",
+        statusMessage: "Analyzing next execution plan",
+      };
+    }
+
+    if (name.includes("tammy")) {
+      return {
+        ...agent,
+        status: "BLOCKED",
+        statusMessage: "Dependency pending to continue",
+      };
+    }
+
+    return {
+      ...agent,
+      status: "WORKING",
+      statusMessage: "Working from assigned workstation",
+    };
+  }
+
+  if (scenario === "mixed-idle-reviewing-thinking") {
+    if (name.includes("codi")) {
+      return {
+        ...agent,
+        status: "IDLE",
+        statusMessage: "Waiting for next assignment",
+      };
+    }
+
+    if (name.includes("ninja")) {
+      return {
+        ...agent,
+        status: "THINKING",
+        statusMessage: "Analyzing next execution plan",
+      };
+    }
+
+    if (name.includes("tammy")) {
+      return {
+        ...agent,
+        status: "REVIEWING",
+        statusMessage: "Reviewing mission outputs",
+      };
+    }
+
+    return {
+      ...agent,
+      status: "WORKING",
+      statusMessage: "Working from assigned workstation",
+    };
+  }
+
+  return agent;
+}
+
+function readScenario(searchParams: ReturnType<typeof useSearchParams>): OfficeScenario {
+  const raw = searchParams.get("scenario");
+  if (raw === "all-working") return "all-working";
+  if (raw === "three-working-one-blocked") return "three-working-one-blocked";
+  if (raw === "mixed-thinking-blocked") return "mixed-thinking-blocked";
+  if (raw === "mixed-idle-reviewing-thinking") return "mixed-idle-reviewing-thinking";
+  return "live";
+}
 
 const MCLUCY_AGENT: Agent = {
   id: MCLUCY_ID,
@@ -43,6 +157,9 @@ const MCLUCY_AGENT: Agent = {
 
 export default function OfficePage() {
   const demoMode = isPublicDemoMode();
+  const searchParams = useSearchParams();
+  const activeScenario = readScenario(searchParams);
+  const useLocalScenarioData = activeScenario !== "live";
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [lucyAvatarUrl, setLucyAvatarUrl] = useState<string>(MCLUCY_AVATAR_URL);
   const [avatarLibrary, setAvatarLibrary] = useState<string[]>([]);
@@ -60,17 +177,23 @@ export default function OfficePage() {
   const { data: agentsData, isLoading: agentsLoading } = useQuery({
     queryKey: ["office-agents"],
     queryFn: getAgents,
+    enabled: !useLocalScenarioData,
     refetchInterval: getRealtimeRefetchInterval(12_000),
   });
 
   const { data: tasksData } = useQuery({
     queryKey: ["office-tasks"],
     queryFn: () => getTasks(),
+    enabled: !useLocalScenarioData,
     refetchInterval: getRealtimeRefetchInterval(12_000),
   });
 
-  const agents = agentsData ?? EMPTY_AGENTS;
-  const tasks = tasksData ?? EMPTY_TASKS;
+  const agents = useLocalScenarioData ? MOCK_AGENTS : (agentsData ?? EMPTY_AGENTS);
+  const tasks = useLocalScenarioData ? MOCK_TASKS : (tasksData ?? EMPTY_TASKS);
+
+  const scenarioAgents = useMemo(() => {
+    return agents.map((agent) => applyScenarioToAgent(agent, activeScenario));
+  }, [activeScenario, agents]);
 
   useEffect(() => {
     hydrateAvatarMapping(readAvatarMappingFromStorage());
@@ -107,7 +230,7 @@ export default function OfficePage() {
     let changed = false;
     const nextMapping = { ...avatarMapping };
 
-    agents.forEach((agent) => {
+    scenarioAgents.forEach((agent) => {
       const apiAvatarUrl = resolveAgentAvatarUrl(agent);
       if (apiAvatarUrl && !nextMapping[agent.id]) {
         nextMapping[agent.id] = apiAvatarUrl;
@@ -118,15 +241,21 @@ export default function OfficePage() {
     if (!changed) return;
     hydrateAvatarMapping(nextMapping);
     saveAvatarMappingToStorage(nextMapping);
-  }, [agents, avatarMapping, hydrateAvatarMapping]);
+  }, [avatarMapping, hydrateAvatarMapping, scenarioAgents]);
 
-  const seatAssignments = useMemo(() => resolveSeatAssignments(agents), [agents]);
+  const seatAssignments = useMemo(() => resolveSeatAssignments(scenarioAgents), [scenarioAgents]);
 
   const derived = useMemo(() => {
-    const baseAgents = agents.map((agent) => {
-      const sceneState = normalizeSceneState(agent);
+    let blockedSlot = 0;
+
+    const baseAgents = scenarioAgents.map((agent) => {
+      const normalizedSceneState = normalizeSceneState(agent);
+      const sceneState = isClaudio(agent)
+        ? { ...normalizedSceneState, pulse: false }
+        : normalizedSceneState;
       const baseZone = resolveBaseZone(agent, seatAssignments);
-      const targetZone = resolveTargetZoneFromState(sceneState.state, baseZone);
+      const slotIndex = sceneState.state === "blocked" ? blockedSlot++ : undefined;
+      const targetZone = resolveTargetZoneFromState(sceneState.state, baseZone, slotIndex);
       const task = resolveCurrentTask(agent, tasks);
       return { agent, sceneState, targetZone, task };
     });
@@ -143,7 +272,7 @@ export default function OfficePage() {
       },
       ...baseAgents,
     ];
-  }, [agents, lucyAvatarUrl, seatAssignments, tasks]);
+  }, [lucyAvatarUrl, scenarioAgents, seatAssignments, tasks]);
 
   useEffect(() => {
     const targets: Record<string, ZoneId> = {};
@@ -154,16 +283,33 @@ export default function OfficePage() {
   }, [derived, syncAgentTargets]);
 
   const sceneAgents: OfficeAgentView[] = useMemo(() => {
-    return derived.map((item) => {
+    const OFFSET_STEP = 9; // px between agents sharing a zone
+    const zoneCount: Record<string, number> = {};
+    const zoneIndex: Record<string, number> = {};
+
+    // First pass: count how many agents share each visual zone
+    const withZones = derived.map((item) => {
       const position = agentPositions[item.agent.id];
       const visualZone = position?.waypointZone ?? position?.targetZone ?? item.targetZone;
+      zoneCount[visualZone] = (zoneCount[visualZone] ?? 0) + 1;
+      return { item, visualZone };
+    });
+
+    // Second pass: assign per-zone index and compute offset
+    return withZones.map(({ item, visualZone }) => {
+      const count = zoneCount[visualZone] ?? 1;
+      const idx = zoneIndex[visualZone] ?? 0;
+      zoneIndex[visualZone] = idx + 1;
       const zoneConfig = OFFICE_ZONES[visualZone] ?? OFFICE_ZONES.hallway;
+      const offsetX = count > 1 ? (idx - (count - 1) / 2) * OFFSET_STEP : 0;
 
       return {
         agent: item.agent,
         task: item.task,
         x: zoneConfig.x,
         y: zoneConfig.y,
+        offsetX,
+        offsetY: 0,
         avatarUrl:
           item.agent.id === MCLUCY_ID
             ? MCLUCY_AVATAR_URL
@@ -243,6 +389,12 @@ export default function OfficePage() {
     <DashboardShell showFilters={false}>
       <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_300px_minmax(0,1fr)] xl:grid-cols-[minmax(0,2fr)_320px_minmax(0,1fr)]">
         <section className="min-h-0 lg:h-full lg:min-h-[560px]">
+          {activeScenario !== "live" ? (
+            <div className="mb-2 rounded border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 text-[11px] uppercase tracking-wider text-cyan-200">
+              Visual scenario: {activeScenario}
+            </div>
+          ) : null}
+
           {agentsLoading ? (
             <div className="flex h-full items-center justify-center rounded-xl border border-surface-700 bg-surface-900 text-sm text-slate-400">
               Loading office scene...

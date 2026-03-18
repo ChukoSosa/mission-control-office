@@ -2,6 +2,7 @@ import type { Agent } from "@/types";
 
 export type SceneState =
   | "working"
+  | "thinking"
   | "idle"
   | "reviewing"
   | "blocked"
@@ -25,6 +26,9 @@ function fromRawStatus(raw?: string | null, statusMessage?: string | null): Scen
   if (value.includes("block")) return "blocked";
   if (value.includes("review")) return "reviewing";
   if (value.includes("idle") || value.includes("standby")) return "idle";
+  if (value.includes("thinking") || value.includes("planning") || value.includes("analyzing")) {
+    return "thinking";
+  }
   if (value.includes("working") || value.includes("active") || value.includes("running")) {
     return "working";
   }
@@ -41,6 +45,13 @@ export function normalizeSceneState(agent: Agent): NormalizedSceneState {
         state,
         label: "Working",
         ringClassName: "ring-2 ring-accent-green",
+        pulse: false,
+      };
+    case "thinking":
+      return {
+        state,
+        label: "Thinking",
+        ringClassName: "ring-2 ring-amber-400",
         pulse: false,
       };
     case "idle":
@@ -61,7 +72,7 @@ export function normalizeSceneState(agent: Agent): NormalizedSceneState {
       return {
         state,
         label: "Blocked",
-        ringClassName: "ring-2 ring-accent-red",
+        ringClassName: "ring-2 ring-red-500",
         pulse: false,
       };
     case "offline":
@@ -75,8 +86,8 @@ export function normalizeSceneState(agent: Agent): NormalizedSceneState {
       return {
         state,
         label: "Critical",
-        ringClassName: "ring-2 ring-accent-red",
-        pulse: true,
+        ringClassName: "ring-2 ring-red-600",
+        pulse: false,
       };
     default:
       return {

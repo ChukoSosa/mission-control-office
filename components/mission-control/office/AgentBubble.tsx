@@ -11,16 +11,18 @@ function getStateBorderClassName(state: NormalizedSceneState): string {
   switch (state.state) {
     case "working":
       return "border-accent-green";
+    case "thinking":
+      return "border-amber-400";
     case "idle":
       return "border-amber-300";
     case "reviewing":
       return "border-yellow-400";
     case "blocked":
-      return "border-accent-red";
+      return "border-red-600";
     case "offline":
       return "border-slate-500";
     case "critical":
-      return "border-accent-red";
+      return "border-red-600";
     default:
       return "border-slate-400";
   }
@@ -100,7 +102,6 @@ function AgentBubbleComponent({
           "relative h-14 w-14 overflow-hidden rounded-full border-2 bg-surface-900/95",
           borderClassName,
           state.ringClassName,
-          state.pulse && "animate-pulse-slow",
         )}
       >
         {avatarUrl && !imageFailed ? (
