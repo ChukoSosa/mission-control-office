@@ -7,7 +7,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Primary Mission Operator",
     status: "WORKING",
     statusMessage: "Driving active implementation tasks",
-    avatarUrl: "https://api.dicebear.com/9.x/bottts/svg?seed=Claudio",
+    avatarUrl: "/office/demo/claudio.svg",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -16,7 +16,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Execution Specialist",
     status: "THINKING",
     statusMessage: "Designing subtask execution strategy",
-    avatarUrl: "https://api.dicebear.com/9.x/bottts/svg?seed=Ninja",
+    avatarUrl: "/office/demo/ninja.svg",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -25,7 +25,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Code Quality Operator",
     status: "IDLE",
     statusMessage: "Waiting for next assignment",
-    avatarUrl: "https://api.dicebear.com/9.x/bottts/svg?seed=Codi",
+    avatarUrl: "/office/demo/codi.svg",
     heartbeatAt: new Date().toISOString(),
   },
   {
@@ -34,7 +34,7 @@ export const MOCK_AGENTS: Agent[] = [
     role: "Mission Coordination Assistant",
     status: "WORKING",
     statusMessage: "Handling installation onboarding",
-    avatarUrl: "https://api.dicebear.com/9.x/bottts/svg?seed=Tammy",
+    avatarUrl: "/office/mcmonkes-library/005.png",
     heartbeatAt: new Date().toISOString(),
   },
 ];

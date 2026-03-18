@@ -271,8 +271,8 @@ export default function OfficePage() {
                 : undefined
             }
             avatarError={avatarError}
-            onPrevAvatar={demoMode || selected?.agent.id === MCLUCY_ID ? undefined : handlePrevAvatar}
-            onNextAvatar={demoMode || selected?.agent.id === MCLUCY_ID ? undefined : handleNextAvatar}
+            onPrevAvatar={selected?.agent.id === MCLUCY_ID ? undefined : handlePrevAvatar}
+            onNextAvatar={selected?.agent.id === MCLUCY_ID ? undefined : handleNextAvatar}
             avatarSwitching={avatarSwitching}
             title={selected?.agent.id === MCLUCY_ID ? "Mission Control Inspector" : "Agent Inspector"}
           />
