@@ -171,17 +171,13 @@ export default function PaymentPage() {
       </section>
 
       {/* ── Section 3: Pricing + Form ── */}
-      <section className="grid items-stretch gap-6 lg:grid-cols-3">
+      <section className="flex flex-row gap-10 items-center justify-center flex-wrap">
 
         {/* Annual — highlighted */}
-        <button
-          type="button"
-          onClick={() => setPlan("annual")}
-          className={`relative flex h-full w-full flex-col rounded-2xl border p-6 text-left transition ${
-            plan === "annual"
-              ? "border-cyan-400 bg-cyan-500/10 ring-1 ring-cyan-400/30 shadow-[0_0_32px_rgba(34,211,238,0.12)]"
-              : "border-slate-800 bg-slate-900/60 hover:border-slate-600"
-          }`}
+        <a
+          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/4a37f2be-24ab-4135-a075-d99966dd673a"
+          target="_blank"
+          className={`relative flex h-full sm:min-h-[430px] w-full sm:max-w-[320px] flex-col rounded-2xl border p-6 text-left transition border-cyan-400 bg-cyan-500/10 ring-1 ring-cyan-400/30 shadow-[0_0_32px_rgba(34,211,238,0.12)]`}
         >
           <div className="flex flex-col items-start justify-between gap-2">
             <span className="rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-200">
@@ -205,23 +201,17 @@ export default function PaymentPage() {
           <div className="mt-auto pt-5">
             <p className="mb-1 text-[11px] text-slate-500">Promotional launch price valid until 10,000 licenses are sold.</p>
             <p className="mb-3 text-[11px] font-medium text-cyan-200">Founding Operator price is locked forever once purchased.</p>
-            <div className={`w-full rounded-md py-2 text-center text-sm font-semibold transition ${
-            plan === "annual" ? "bg-cyan-400 text-slate-950" : "border border-slate-700 text-slate-300"
-            }`}>
+            <div className={`w-full rounded-md py-2 text-center text-sm font-semibold transition bg-cyan-400 text-slate-950`}>
               Become a Founding Operator
             </div>
           </div>
-        </button>
+        </a>
 
         {/* Monthly */}
-        <button
-          type="button"
-          onClick={() => setPlan("monthly")}
-          className={`w-full flex h-full flex-col rounded-2xl border p-6 text-left transition ${
-            plan === "monthly"
-              ? "border-amber-400/70 bg-amber-500/12 ring-1 ring-amber-300/30 shadow-[0_0_28px_rgba(245,158,11,0.12)]"
-              : "border-amber-500/30 bg-amber-500/5 hover:border-amber-400/60"
-          }`}
+        <a
+          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/d2066129-a43e-450c-82b6-49b36554483a"
+          target="_blank"
+          className={`w-full sm:max-w-[320px] flex h-full sm:min-h-[430px] flex-col rounded-2xl border p-6 text-left transition border-amber-400/70 bg-amber-500/12 ring-1 ring-amber-300/30 shadow-[0_0_28px_rgba(245,158,11,0.12)] `}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300 mt-7">Monthly Operator</p>
           <div>
@@ -239,17 +229,13 @@ export default function PaymentPage() {
           </ul>
           <div className="mt-auto pt-5">
             <p className="mb-3 text-[11px] text-slate-500">Same functionality as Founding Operator. Difference is pricing model only.</p>
-            <div className={`w-full rounded-md py-2 text-center text-sm font-semibold transition ${
-              plan === "monthly"
-                ? "bg-amber-300 text-slate-950"
-                : "border border-amber-400/40 text-amber-200"
-            }`}>
+            <div className={`w-full rounded-md py-2 text-center text-sm font-semibold transition bg-amber-300 text-slate-950 `}>
               Start Monthly Access
             </div>
           </div>
-        </button>
+        </a>
 
-        {/* Checkout form */}
+        {/* Checkout form 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
           <div>
             <h2 className="text-base font-semibold text-white">Card Details</h2>
@@ -323,6 +309,7 @@ export default function PaymentPage() {
             This is a demo checkout. Payment gateway integration will be added next.
           </p>
         </form>
+        */}
       </section>
 
       {/* ── Section 4: Why support ── */}
