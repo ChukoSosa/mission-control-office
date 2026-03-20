@@ -34,7 +34,7 @@ export function FirstRunSetupModal({
     if (!open) return;
     setPathInput(initialPath);
     setPickerHint("");
-  }, [open]);
+  }, [initialPath, open]);
 
   const canUseDirectoryPicker = useMemo(() => {
     if (typeof window === "undefined") return false;
