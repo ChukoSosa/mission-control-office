@@ -1,6 +1,7 @@
 // All API calls route through /proxy which Next.js rewrites to the configured API base URL.
 // This avoids CORS issues when running Next.js on a different port than the API.
 const API_PREFIX = "/proxy";
+const API_TOKEN = process.env.NEXT_PUBLIC_MISSION_CONTROL_API_TOKEN;
 
 export class ApiError extends Error {
   constructor(
@@ -18,6 +19,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
       ...options?.headers,
     },
   });
