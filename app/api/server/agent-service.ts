@@ -1,4 +1,4 @@
-import type { AgentStatus as PrismaAgentStatus } from "@prisma/client";
+import type { Agent as PrismaAgent, AgentStatus as PrismaAgentStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { emitEvent } from "./event-bus";
@@ -111,9 +111,36 @@ async function claimAssignedBacklogIfNeeded(agentId: string) {
   return result;
 }
 
+async function ensureAgentAvatar(agent: PrismaAgent) {
+  if (agent.avatar) {
+    return agent;
+  }
+
+  const autoAvatar = pickDeterministicMcMonkeyAvatar(agent.id);
+  if (!autoAvatar) {
+    return agent;
+  }
+
+  const updated = await prisma.agent.update({
+    where: { id: agent.id },
+    data: { avatar: autoAvatar },
+  });
+
+  emitEvent({
+    type: "agent.avatar",
+    data: {
+      id: updated.id,
+      avatarUrl: autoAvatar,
+    },
+  });
+
+  return updated;
+}
+
 export const agentService = {
   async list() {
-    return prisma.agent.findMany({ orderBy: { name: "asc" } });
+    const agents = await prisma.agent.findMany({ orderBy: { name: "asc" } });
+    return Promise.all(agents.map((agent) => ensureAgentAvatar(agent)));
   },
 
   async getById(id: string) {
@@ -145,23 +172,7 @@ export const agentService = {
       agent = autoClaim.agent;
     }
 
-    if (!agent.avatar) {
-      const autoAvatar = pickDeterministicMcMonkeyAvatar(agent.id);
-      if (autoAvatar) {
-        agent = await prisma.agent.update({
-          where: { id: agent.id },
-          data: { avatar: autoAvatar },
-        });
-
-        emitEvent({
-          type: "agent.avatar",
-          data: {
-            id: agent.id,
-            avatarUrl: autoAvatar,
-          },
-        });
-      }
-    }
+    agent = await ensureAgentAvatar(agent);
 
     emitEvent({
       type: "agent.status",
