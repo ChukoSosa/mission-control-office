@@ -194,12 +194,12 @@ export default function PaymentPage() {
             trackBuyCtaClick({
               cta_location: "payment_annual_founding_operator",
               destination_type: "external_checkout",
-              destination: "https://mcmonkeys.lemonsqueezy.com/checkout/buy/4a37f2be-24ab-4135-a075-d99966dd673a",
+              destination: "https://mcmonkeys.lemonsqueezy.com/checkout/buy/d60e8f39-05f9-4832-a0b2-3190aa2095c6",
             });
             trackCheckoutRedirectClick({
               plan: "annual",
               provider: "lemonsqueezy",
-              checkout_url: "4a37f2be-24ab-4135-a075-d99966dd673a",
+              checkout_url: "d60e8f39-05f9-4832-a0b2-3190aa2095c6",
             });
           }}
           className={`relative flex flex-col h-full sm:min-h-[430px] w-full rounded-2xl border p-6 text-left transition border-cyan-400 bg-cyan-500/10 ring-1 ring-cyan-400/30 shadow-[0_0_32px_rgba(34,211,238,0.12)]`}
@@ -241,12 +241,12 @@ export default function PaymentPage() {
             trackBuyCtaClick({
               cta_location: "payment_monthly_operator",
               destination_type: "external_checkout",
-              destination: "https://mcmonkeys.lemonsqueezy.com/checkout/buy/d2066129-a43e-450c-82b6-49b36554483a",
+              destination: "https://mcmonkeys.lemonsqueezy.com/checkout/buy/edab9f30-52d2-4c5a-a9ad-ab6b2bfe62fc",
             });
             trackCheckoutRedirectClick({
               plan: "monthly",
               provider: "lemonsqueezy",
-              checkout_url: "d2066129-a43e-450c-82b6-49b36554483a",
+              checkout_url: "edab9f30-52d2-4c5a-a9ad-ab6b2bfe62fc",
             });
           }}
           className={`w-full flex flex-col h-full sm:min-h-[430px] rounded-2xl border p-6 text-left transition border-amber-400/70 bg-amber-500/12 ring-1 ring-amber-300/30 shadow-[0_0_28px_rgba(245,158,11,0.12)] `}
