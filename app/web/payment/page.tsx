@@ -187,7 +187,7 @@ export default function PaymentPage() {
 
         {/* Annual — highlighted */}
         <a
-          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/4a37f2be-24ab-4135-a075-d99966dd673a"
+          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/d60e8f39-05f9-4832-a0b2-3190aa2095c6"
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
@@ -234,7 +234,7 @@ export default function PaymentPage() {
 
         {/* Monthly */}
         <a
-          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/d2066129-a43e-450c-82b6-49b36554483a"
+          href="https://mcmonkeys.lemonsqueezy.com/checkout/buy/edab9f30-52d2-4c5a-a9ad-ab6b2bfe62fc"
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
